@@ -1,52 +1,64 @@
-import dotenv from "dotenv"; // Импортируем dotenv
-dotenv.config(); // Загружаем переменные окружения из .env файла
-
+import dotenv from "dotenv";
+dotenv.config();
 import express from "express";
 import http from "http";
-import { Server } from "socket.io"; // Именованный импорт
+import { Server } from "socket.io";
 import { connectDB } from "./config/db.js";
 import cors from "cors";
+import messageRoutes from "./routes/messageRoutes.js"; // Подключаем маршруты для сообщений
+import { sendMessage } from "./controllers/messageController.js"; // Импортируем контроллер для отправки сообщений
 
+// ===================================
 const app = express();
-connectDB(); // Подключаем базу данных
-
-// Создаем сервер с использованием http и express
+connectDB(); // Подключаемся к базе данных
 const server = http.createServer(app);
 
-// Создаем экземпляр socket.io
-const io = new Server(server); // Используем конструктор Server для создания экземпляра
-
+// ===================================================
+const io = new Server(server, {
+  cors: {
+    origin: "http://localhost:3000", // Разрешаем доступ с фронтенда
+    methods: ["GET", "POST"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  },
+});
+// ===================================================
 app.use(
   cors({
-    origin: "*",
+    origin: "http://localhost:3000",
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 
-// Новый маршрут для отображения сообщения о запуске сервера
-app.get("/", (req, res) => {
-  res.send("<h1>Server is running on port 5000</h1>");
-});
+// ===================================================
+app.use("/", messageRoutes); // Подключаем маршруты для API
 
-// Слушаем сокет-соединения
+// ===================================================
+// WebSocket обработка подключений и отправки сообщений через Socket.IO
 io.on("connection", (socket) => {
   console.log("User connected");
 
-  // Обработчик для отправки сообщений
-  socket.on("sendMessage", (msg) => {
-    io.emit("receiveMessage", msg); // Отправляем всем пользователям
+  // Обработка события получения сообщения
+  socket.on("sendMessage", async (msg) => {
+    try {
+      // Сохраняем новое сообщение в базе данных через контроллер
+      await sendMessage(msg);
+
+      // Отправляем сообщение всем подключенным клиентам
+      io.emit("receiveMessage", msg);
+    } catch (error) {
+      console.error("Error handling message:", error);
+    }
   });
 
-  // Обработчик для отслеживания отключения
   socket.on("disconnect", () => {
     console.log("User disconnected");
   });
 });
 
+// ===================================================
 const PORT = process.env.PORT || 5000;
 
-// Запуск сервера
 server.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
 });
