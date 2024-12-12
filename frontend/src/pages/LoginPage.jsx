@@ -13,7 +13,7 @@ const LoginPage = () => {
   };
 
   return (
-    <div>
+    <div className="page-container">
       <h1>Login to Chat</h1>
       <input
         type="text"

@@ -1,9 +1,12 @@
 import React, { useEffect, useState } from "react";
 import io from "socket.io-client";
-import LoginPage from "./pages/LoginPage";
-import ProfilePage from "./pages/ProfilePage";
-import HomePage from "../src/pages/Home";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import AppRouter from "./router/AppRouter";
+import Header from "./components/Header/Header";
+
+// import LoginPage from "./pages/LoginPage";
+// import ProfilePage from "./pages/ProfilePage";
+// import HomePage from "../src/pages/Home";
 
 const serverUrl = process.env.REACT_APP_API_URL;
 const socket = io(serverUrl);
@@ -23,14 +26,16 @@ function App() {
 
   return (
     <Router>
-      <Routes>
+      <Header />
+      <AppRouter />
+      {/* <Routes>
         <Route
           path="/"
-          element={<HomePage messages={messages} socket={socket} />}
+          element={<Home messages={messages} socket={socket} />}
         />
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/profile" element={<ProfilePage />} />
-      </Routes>
+        {/*<Route path="/login" element={<LoginPage />} />
+        <Route path="/profile" element={<ProfilePage />} /> 
+      </Routes> */}
     </Router>
   );
 }

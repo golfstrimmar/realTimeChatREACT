@@ -3,7 +3,7 @@ import Chat from "../components/Chat/Chat";
 
 const HomePage = ({ messages, socket }) => {
   return (
-    <div>
+    <div className="page-container">
       <h1>Welcome to the Chat!</h1>
       <Chat messages={messages} socket={socket} />
     </div>

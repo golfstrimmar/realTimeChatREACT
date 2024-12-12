@@ -78,32 +78,30 @@
 // export default Chat;
 
 import React, { useState } from "react";
-import Message from "../Message/Message";
+// import Message from "../Message/Message";
 import InputField from "../InputField/InputField";
-import Header from "../Header/Header";
 
 const Chat = ({ messages, socket }) => {
   const [message, setMessage] = useState("");
 
-  const sendMessage = () => {
-    if (message.trim()) {
-      socket.emit("sendMessage", message);
-      setMessage("");
-    }
-  };
+  // const sendMessage = () => {
+  //   if (message.trim()) {
+  //     socket.emit("sendMessage", message);
+  //     setMessage("");
+  //   }
+  // };
 
   return (
-    <div className="chat-container">
-      <Header />
+    <div className="page-container chat-container">
       <div className="messages">
-        {messages.map((msg, index) => (
+        {/* {messages.map((msg, index) => (
           <Message key={index} text={msg} />
-        ))}
+        ))} */}
       </div>
       <InputField
         message={message}
         setMessage={setMessage}
-        sendMessage={sendMessage}
+        // sendMessage={sendMessage}
       />
     </div>
   );
