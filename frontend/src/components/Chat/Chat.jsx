@@ -1,108 +1,104 @@
-// import React, { useState, useEffect } from "react";
-// import { io } from "socket.io-client";
-// import {
-//   TextField,
-//   Button,
-//   List,
-//   ListItem,
-//   ListItemText,
-//   Paper,
-// } from "@mui/material";
-// import axios from "axios";
+import React, { useState, useEffect } from "react";
+import Message from "../Message/Message";
+import { io } from "socket.io-client";
+import axios from "axios";
+import {
+  List,
+  Typography,
+  Paper,
+  Grid,
+  Button,
+  TextField,
+} from "@mui/material";
+import SendIcon from "@mui/icons-material/Send";
 
-// // Получаем URL сервера из переменной окружения
-// const serverUrl = process.env.REACT_APP_API_URL;
+// Подключение к серверу Socket.IO
+const socket = io(process.env.REACT_APP_API_URL);
 
-// const socket = io(serverUrl); // Подключение к серверу Socket.IO
-
-// const Chat = () => {
-//   const [messages, setMessages] = useState([]);
-//   const [message, setMessage] = useState("");
-
-//   // Загружаем сообщения с сервера при монтировании компонента
-//   useEffect(() => {
-//     // Получаем сообщения с API
-//     axios
-//       .get(`${serverUrl}/messages`)
-//       .then((response) => {
-//         setMessages(response.data);
-//         console.log("messages", response.data);
-//       })
-//       .catch((error) => {
-//         console.error("Error loading messages:", error);
-//       });
-
-//     socket.on("receiveMessage", (msg) => {
-//       setMessages((prevMessages) => [...prevMessages, msg]);
-//     });
-
-//     return () => {
-//       socket.off("receiveMessage");
-//     };
-//   }, []);
-
-//   const handleSendMessage = () => {
-//     if (message.trim()) {
-//       socket.emit("sendMessage", message);
-//       setMessages((prevMessages) => [...prevMessages, message]);
-//       setMessage("");
-//     }
-//   };
-
-//   return (
-//     <Paper style={{ padding: "20px", maxWidth: "600px", margin: "auto" }}>
-//       <h2>Chat</h2>
-//       <List style={{ maxHeight: "300px", overflowY: "auto" }}>
-//         {messages.map((msg, index) => (
-//           <ListItem key={index}>
-//             <ListItemText primary={msg.createdAt} />
-//             <ListItemText primary={msg.text} />
-//           </ListItem>
-//         ))}
-//       </List>
-//       <TextField
-//         label="Type your message"
-//         variant="outlined"
-//         fullWidth
-//         value={message}
-//         onChange={(e) => setMessage(e.target.value)}
-//         style={{ marginBottom: "10px" }}
-//       />
-//       <Button variant="contained" color="primary" onClick={handleSendMessage}>
-//         Send
-//       </Button>
-//     </Paper>
-//   );
-// };
-
-// export default Chat;
-
-import React, { useState } from "react";
-// import Message from "../Message/Message";
-import InputField from "../InputField/InputField";
-
-const Chat = ({ messages, socket }) => {
+const Chat = () => {
+  const [messages, setMessages] = useState([]);
   const [message, setMessage] = useState("");
 
-  // const sendMessage = () => {
-  //   if (message.trim()) {
-  //     socket.emit("sendMessage", message);
-  //     setMessage("");
-  //   }
-  // };
+  // Загружаем сообщения с сервера при монтировании компонента
+  useEffect(() => {
+    axios
+      .get(`${process.env.REACT_APP_API_URL}/messages`)
+      .then((response) => {
+        setMessages(response.data);
+        console.log("messages loaded:", response.data);
+      })
+      .catch((error) => {
+        console.error("Error loading messages:", error);
+      });
+
+    // Обработка входящих сообщений от сервера
+    socket.on("receiveMessage", (msg) => {
+      setMessages((prevMessages) => [...prevMessages, msg]);
+    });
+
+    return () => {
+      // Очистка события при размонтировании
+      socket.off("receiveMessage");
+    };
+  }, []);
+
+  // Отправка сообщения на сервер через сокет
+  const sendMessage = () => {
+    if (message.trim()) {
+      // const messageObject = {
+      //   text: message,
+      //   createdAt: new Date(),
+      // };
+      const messageObject = { text: message };
+      console.log("Sending message:", messageObject);
+      socket.emit("sendMessage", messageObject);
+      // setMessages((prevMessages) => [
+      //   ...prevMessages,
+      //   { text: message, createdAt: new Date() },
+      // ]); // Добавляем сообщение локально
+      setMessage(""); // Очищаем поле ввода
+    }
+  };
 
   return (
     <div className="page-container chat-container">
-      <div className="messages">
-        {/* {messages.map((msg, index) => (
-          <Message key={index} text={msg} />
-        ))} */}
-      </div>
-      <InputField
-        message={message}
-        setMessage={setMessage}
-        // sendMessage={sendMessage}
-      />
+      {messages.length > 0 ? (
+        <List style={{ maxHeight: "300px", overflowY: "auto" }}>
+          {messages.map((message, index) => (
+            <Message key={index} message={message} />
+          ))}
+        </List>
+      ) : (
+        <Typography variant="h6">No messages yet</Typography>
+      )}
+
+      <Paper style={{ padding: "16px", marginTop: "16px" }}>
+        <Grid container spacing={2} alignItems="center">
+          <Grid item xs={10}>
+            <TextField
+              fullWidth
+              variant="outlined"
+              label="Type a message..."
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              multiline
+              rows={4}
+              size="small"
+            />
+          </Grid>
+          <Grid item xs={2}>
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={sendMessage}
+              fullWidth
+              endIcon={<SendIcon />}
+            >
+              Send
+            </Button>
+          </Grid>
+        </Grid>
+      </Paper>
     </div>
   );
 };

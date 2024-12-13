@@ -1,3 +1,35 @@
+netstat -ano | findstr :3000
+netstat -ano | findstr :5000
+taskkill /F /PID 12484
+taskkill /F /PID 12484
+taskkill /F /PID 9752 
+taskkill /F /PID 10400
+taskkill /F /PID 
+taskkill /F /PID 
+taskkill /F /PID 
+taskkill /F /PID 
+# удаление комментов
+
+edit-find-replace
+поиск
+(.*?)(\/\/.*)
+замена
+$1
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).

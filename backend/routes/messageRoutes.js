@@ -1,9 +1,22 @@
 import express from "express";
-import { getMessages } from "../controllers/messageController.js";
+import {
+  getMessages,
+  sendMessage,
+  likeMessage,
+  addComment,
+  deleteMessage,
+} from "../controllers/messageController.js";
 
 const router = express.Router();
 
-// Маршрут для получения всех сообщений
-router.get("/messages", getMessages);
+router.get("/", getMessages);
+
+router.post("/", sendMessage);
+
+router.patch("/:id/like", likeMessage);
+
+router.post("/:id/comments", addComment);
+
+router.delete("/:id", deleteMessage);
 
 export default router;

@@ -1,10 +1,11 @@
 import React from "react";
-
-const Message = ({ text }) => {
+import { Typography, ListItem, ListItemText } from "@mui/material";
+const Message = ({ message }) => {
   return (
-    <div className="message">
-      <p>{text}</p>
-    </div>
+    <ListItem className="message">
+      <ListItemText primary={message.createdAt} />
+      <ListItemText primary={message.text} />
+    </ListItem>
   );
 };
 

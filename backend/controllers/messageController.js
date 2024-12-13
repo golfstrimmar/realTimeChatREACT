@@ -11,14 +11,79 @@ export const getMessages = async (req, res) => {
   }
 };
 
-// Контроллер для сохранения нового сообщения
-export const sendMessage = async (msg) => {
+export const sendMessage = async (req, res) => {
+  console.log(req.body);
+  const { text } = req.body;
+  console.log("req.body", text); // Логируем `text` для отладки
   try {
     const newMessage = new Message({
-      text: msg,
+      text,
     });
     await newMessage.save(); // Сохраняем сообщение в базе данных
+    res.status(201).json(newMessage); // Возвращаем сохраненное сообщение
   } catch (error) {
     console.error("Error saving message:", error);
+    res.status(500).json({ message: "Error saving message" });
   }
+};
+
+export const likeMessage = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const message = await Message.findById(id);
+    if (!message) {
+      return res.status(404).json({ message: "Message not found" });
+    }
+    message.likes += 1;
+    await message.save();
+    res.json(message); // Возвращаем обновленное сообщение
+  } catch (error) {
+    console.error("Error liking message:", error);
+    res.status(500).json({ message: "Error liking message" });
+  }
+};
+
+export const addComment = async (req, res) => {
+  const { id } = req.params;
+  const { text, user } = req.body;
+
+  if (!text || !user) {
+    return res.status(400).json({ message: "Text and user are required" });
+  }
+
+  try {
+    const message = await Message.findById(id);
+    if (!message) {
+      return res.status(404).json({ message: "Message not found" });
+    }
+    message.comments.push({ text, user });
+    await message.save();
+    res.json(message); // Возвращаем сообщение с обновленными комментариями
+  } catch (error) {
+    console.error("Error adding comment:", error);
+    res.status(500).json({ message: "Error adding comment" });
+  }
+};
+
+export const deleteMessage = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const message = await Message.findById(id);
+    if (!message) {
+      return res.status(404).json({ message: "Message not found" });
+    }
+    await Message.findByIdAndDelete(id);
+    res.status(200).json({ message: "Message deleted" });
+  } catch (error) {
+    console.error("Error deleting message:", error);
+    res.status(500).json({ message: "Error deleting message" });
+  }
+};
+
+export default {
+  getMessages,
+  sendMessage,
+  likeMessage,
+  addComment,
+  deleteMessage,
 };
