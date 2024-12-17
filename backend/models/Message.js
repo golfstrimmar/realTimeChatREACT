@@ -19,18 +19,22 @@ const messageSchema = new mongoose.Schema({
       });
     },
   },
-  likes: {
-    type: Number,
-    default: 0,
-  },
+  positiveLikes: { type: Number, default: 0 },
+  negativeLikes: { type: Number, default: 0 },
   comments: [
     {
-      text: String,
+      text: {
+        type: String,
+        required: true,
+      },
       createdAt: {
         type: Date,
         default: Date.now,
       },
-      user: String,
+      user: {
+        type: String,
+        required: true,
+      },
     },
   ],
 });

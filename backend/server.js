@@ -2,18 +2,39 @@ import dotenv from "dotenv";
 dotenv.config();
 import express from "express";
 import http from "http";
+import multer from "multer";
 import { Server } from "socket.io";
 import { connectDB } from "./config/db.js";
 import cors from "cors";
 import messageRoutes from "./routes/messageRoutes.js"; // Подключаем маршруты для сообщений
-import { sendMessage } from "./controllers/messageController.js"; // Импортируем контроллер для отправки сообщений
+import { sendMessage } from "./controllers/messageController.js";
 import Message from "./models/Message.js";
+import authRoutes from "./routes/authRoutes.js";
+import { fileURLToPath } from "url";
+import path from "path";
+import fs from "fs";
 // ===================================
-// Настроим Express сервер
+const upload = multer();
+dotenv.config();
+connectDB();
 const app = express();
-connectDB(); // Подключаемся к базе данных
+
 const server = http.createServer(app);
 app.use(express.json());
+// ===================================================
+// Получаем путь к текущей директории с помощью import.meta.url
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Папка, где будут храниться кэшированные изображения
+const imageCachePath = path.join(__dirname, "imageCache");
+
+// Создаем директорию для кэшированных изображений, если она не существует
+fs.mkdirSync(imageCachePath, { recursive: true });
+
+// Настройка статического сервера для изображений
+// Это будет отдавать файлы из папки imageCache
+app.use("/images", express.static(imageCachePath));
 // ===================================================
 // Настроим Socket.IO сервер
 const io = new Server(server, {
@@ -37,49 +58,56 @@ app.use(
 // ===================================
 io.on("connection", (socket) => {
   console.log("User connected");
-
-  // Отправка всех сообщений при подключении клиента
   socket.emit("receiveMessages");
 
-  // Обработка отправки нового сообщения
   socket.on("sendMessage", async (msg) => {
     console.log("new message:", msg);
     try {
       const newMessage = new Message({
-        text: msg.text, // Сохраняем сообщение в базе данных
+        text: msg.text,
       });
-      await newMessage.save(); // Сохраняем сообщение в базе данных
-      io.emit("receiveMessage", newMessage); // Отправляем новое сообщение всем подключенным клиентам
+      await newMessage.save();
+      io.emit("receiveMessage", newMessage);
     } catch (error) {
       console.error("Error sending message:", error);
     }
   });
 
-  // Обработка лайка на сообщение
-  socket.on("likeMessage", async (id) => {
+  socket.on("likeMessage", async (id, type) => {
     try {
-      const updatedMessage = await likeMessage(id); // Увеличиваем количество лайков
-      io.emit("updateMessage", updatedMessage); // Отправляем обновленное сообщение всем клиентам
+      const message = await Message.findById(id);
+
+      if (type === "positive") {
+        message.positiveLikes += 1;
+      } else if (type === "negative") {
+        message.negativeLikes += 1;
+      }
+      await message.save();
+      io.emit("updateMessage", message);
     } catch (error) {
-      console.error("Error liking message:", error);
+      console.error("Error:", error);
     }
   });
 
-  // Обработка добавления комментария
   socket.on("addComment", async (id, comment) => {
     try {
-      const updatedMessage = await addComment(id, comment); // Добавляем комментарий
-      io.emit("updateMessage", updatedMessage); // Отправляем обновленное сообщение всем клиентам
+      const message = await Message.findById(id);
+
+      if (message) {
+        message.comments.push(comment);
+        await message.save();
+        io.emit("updateMessage", message);
+      }
     } catch (error) {
       console.error("Error adding comment:", error);
     }
   });
 
-  // Обработка удаления сообщения
+  // ========deleteMessage
   socket.on("deleteMessage", async (id) => {
     try {
-      const deletedMessage = await deleteMessage(id); // Удаляем сообщение
-      io.emit("removeMessage", id); // Отправляем всем клиентам ID удаленного сообщения
+      const deletedMessage = await deleteMessage(id);
+      io.emit("removeMessage", id);
     } catch (error) {
       console.error("Error deleting message:", error);
     }
@@ -93,7 +121,7 @@ io.on("connection", (socket) => {
 app.use("/messages", messageRoutes);
 
 // ===================================================
-
+app.use("/auth", upload.none(), authRoutes);
 // ===================================================
 // Запуск сервера
 const PORT = process.env.PORT || 5000;

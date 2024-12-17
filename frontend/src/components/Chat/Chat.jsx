@@ -35,10 +35,18 @@ const Chat = () => {
     socket.on("receiveMessage", (msg) => {
       setMessages((prevMessages) => [...prevMessages, msg]);
     });
+    // Обработчик обновления сообщения
+    socket.on("updateMessage", (updatedMessage) => {
+      setMessages((prevMessages) =>
+        prevMessages.map((msg) =>
+          msg._id === updatedMessage._id ? updatedMessage : msg
+        )
+      );
+    });
 
     return () => {
-      // Очистка события при размонтировании
       socket.off("receiveMessage");
+      socket.off("updateMessage");
     };
   }, []);
 
@@ -59,13 +67,24 @@ const Chat = () => {
       setMessage(""); // Очищаем поле ввода
     }
   };
-
+  const handleLike = (messageId, type) => {
+    socket.emit("likeMessage", messageId, type);
+  };
+  const handleAddComment = (id, comment) => {
+    socket.emit("addComment", id, comment);
+  };
+  //  ============================
   return (
     <div className="page-container chat-container">
       {messages.length > 0 ? (
-        <List style={{ maxHeight: "300px", overflowY: "auto" }}>
+        <List>
           {messages.map((message, index) => (
-            <Message key={index} message={message} />
+            <Message
+              key={index}
+              message={message}
+              onLike={handleLike}
+              onAddComment={handleAddComment}
+            />
           ))}
         </List>
       ) : (
