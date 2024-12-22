@@ -1,3 +1,72 @@
+@import "../../scss/common/common.scss";
+
+.message-card {
+  position: relative;
+  padding: 0 0 20px 0;
+}
+
+.message-card-content *::not(.comment-icon) {
+  color: $b !important;
+}
+
+.message-text {
+  padding: 5px !important;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  margin: 10px 0 20px 0 !important;
+  border-radius: 5px;
+}
+
+.message-file {
+  object-fit: cover;
+  width: 100%;
+  max-width: 400px;
+  border-radius: 5px;
+  margin: 15px 0 0 0;
+}
+
+.message-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.comment-block {
+  margin: 5px 0;
+
+  .comment-name {
+    margin: 15px 10px 0 0;
+    background-color: rgba(0, 0, 0, 0.1);
+    padding: 5px 10px;
+    border-radius: 50%;
+  }
+}
+
+.comment-text {
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  padding: 5px 10px;
+  border-radius: 5px;
+  background-color: #214067;
+  color: white !important;
+}
+
+.delete-icon {
+  cursor: pointer;
+  margin: 0 0 0 15px;
+  border-radius: 50%;
+  transition: all 0.2s ease-in-out;
+  padding: 5px;
+
+  &:hover {
+    background-color: rgba(255, 0, 0, 0.1) !important;
+  }
+}
+
+.deliteCard {
+  cursor: pointer;
+
+}
+
+
 .like-button {
   cursor: pointer;
   margin-right: 8px;
@@ -5,6 +74,8 @@
   font-size: 14px;
 }
 
-.message-text {
-  margin: 10px 0 20px 0 !important;
+.comment-icon {
+  cursor: pointer;
+  margin: 0 0 0 15px;
+  color: #0e6bdd !important;
 }

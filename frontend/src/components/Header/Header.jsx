@@ -17,6 +17,10 @@ import {
 import Logout from "@mui/icons-material/Logout";
 import { useSelector, useDispatch } from "react-redux";
 import { ReactComponent as Logo } from "../../assets/svg/logo.svg";
+import { ReactComponent as No } from "../../assets/svg/nodejs.svg";
+import { ReactComponent as Ex } from "../../assets/svg/express.svg";
+import { ReactComponent as Md } from "../../assets/svg/mongodb.svg";
+import { ReactComponent as Socket } from "../../assets/svg/socket.svg";
 // ICONS
 import MenuIcon from "@mui/icons-material/Menu";
 import HomeIcon from "@mui/icons-material/Home";
@@ -25,6 +29,8 @@ import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import AppRegistrationIcon from "@mui/icons-material/AppRegistration";
 import { setUser } from "../../redux/actions/authActions";
 import { restoreAuth } from "../../redux/actions/authActions";
+import "./Header.scss";
+// =====================
 
 const Header = () => {
   const [anchormobEl, setAnchormobEl] = useState(null);
@@ -36,7 +42,7 @@ const Header = () => {
   const [anchorAvatarEl, setAnchorAvatarEl] = useState(null);
   const [menuAvatarOpen, setMenuAvatarOpen] = useState(false);
   const dispatch = useDispatch();
-
+  const socket = useSelector((state) => state.socket.socket);
   // ============================
   const imageUrl = user?.picture
     ? `${process.env.REACT_APP_API_URL}${user.picture}`
@@ -77,10 +83,11 @@ const Header = () => {
 
   //======================================
   const handleLogout = () => {
+    console.log("logout", user);
+    socket.emit("disconnectUser", user.name);
     localStorage.removeItem("user");
-    localStorage.removeItem("token");
     dispatch(setUser(null, null));
-    navigate("/login");
+    navigate("/");
   };
 
   // =============Открытие меню на мобильных устройствах
@@ -113,11 +120,20 @@ const Header = () => {
       }}
       className="header"
     >
-      <Container maxWidth="xl">
+      <Container maxWidth="xl" className="ContainerHeader">
         <Toolbar className="toolbar">
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+          <Typography
+            variant="h6"
+            component="div"
+            sx={{ flexGrow: 1 }}
+            className="logo"
+          >
             <Link to="/">
+              <Socket />
               <Logo />
+              <No />
+              <Ex />
+              <Md />
             </Link>
           </Typography>
           {/* Добавляем отображение имени пользователя рядом с иконкой меню на мобильных */}
@@ -190,12 +206,17 @@ const Header = () => {
                         component={Link}
                         to="/profile"
                         onClose={handleCloseAvatar}
+                        onClick={handleCloseAvatar}
                       >
                         <Avatar />
                         See profile
                       </MenuItem>
                       <Divider />
-                      <MenuItem color="inherit" onClick={handleLogout}>
+                      <MenuItem
+                        color="inherit"
+                        onClick={handleLogout}
+                        onClose={handleCloseAvatar}
+                      >
                         <ListItemIcon>
                           <Logout fontSize="small" />
                         </ListItemIcon>

@@ -24,32 +24,6 @@ const Profile = () => {
     ? `${process.env.REACT_APP_API_URL}${user.picture}` // Добавляем путь к серверу
     : null;
 
-  useEffect(() => {
-    if (user && token) {
-      console.log("user", user);
-      const fetchOrders = async () => {
-        try {
-          const response = await axios.get(
-            `${process.env.REACT_APP_API_URL}/orders`,
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-            }
-          );
-          const userOrders = response.data.filter(
-            (order) => order.user._id === user.id
-          );
-          setOrders(userOrders);
-        } catch (error) {
-          console.error("Error fetching orders:", error);
-        }
-      };
-
-      fetchOrders();
-    }
-  }, [user, token]);
-
   if (!user) {
     return (
       <Container maxWidth="sm">

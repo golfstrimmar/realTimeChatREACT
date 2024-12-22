@@ -35,8 +35,19 @@ const messageSchema = new mongoose.Schema({
         type: String,
         required: true,
       },
+      name: {
+        type: String,
+        required: true,
+      },
     },
   ],
+  author: {
+    type: String,
+    required: true,
+  },
+  file: {
+    type: String,
+  },
 });
 
 const Message = mongoose.model("Message", messageSchema);

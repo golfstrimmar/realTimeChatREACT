@@ -1,0 +1,19 @@
+ .logo {
+   svg {
+     width: 40px;
+     height: 40px;
+   }
+ }
+
+ @media (max-width: 920px) {
+   .logo {
+     svg {
+       width: 30px;
+       height: 30px;
+     }
+   }
+
+   .ContainerHeader {
+     padding: 0;
+   }
+ }

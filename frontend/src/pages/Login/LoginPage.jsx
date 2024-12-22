@@ -50,16 +50,12 @@ const Login = () => {
           formData
         );
         const { user, token } = response.data;
-
         localStorage.setItem("user", JSON.stringify(user));
-        localStorage.setItem("token", token);
-
         dispatch(setUser(user, token));
         setSuccessMessage("Login successful");
-
         setTimeout(() => {
-          navigate("/profile");
-        }, 2000);
+          navigate("/");
+        }, 1000);
       } catch (error) {
         setErrorMessage(error.response.data.message);
         console.error(error.response.data);
@@ -85,7 +81,7 @@ const Login = () => {
         setSuccessMessage("Google login successful");
 
         setTimeout(() => {
-          navigate("/profile");
+          navigate("/");
         }, 2000);
       })
       .catch((error) => {
