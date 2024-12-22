@@ -30,13 +30,25 @@ function App() {
 
     dispatch(setSocket(socket));
     socket.on("onlineUsers", (users) => {
-      dispatch(setOnlineUsers(users)); 
+      dispatch(setOnlineUsers(users));
     });
+
+    // ================================
+    // const handleVisibilityChange = () => {
+    //   if (document.visibilityState === "hidden") {
+    //     socket.emit("disconnectUser");
+    //     localStorage.clear();
+    //   }
+    // };
+
+    // document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    // ================================
     return () => {
       if (socket) {
-        socket.disconnect(); // Отключаем сокет, если компонент размонтирован
-        window.socketInstance = null; // Очищаем ссылку на сокет
-        dispatch(setSocket(null)); // Очищаем сокет из состояния Redux
+        socket.disconnect();
+        window.socketInstance = null;
+        dispatch(setSocket(null));
       }
     };
   }, [dispatch]);

@@ -25,6 +25,8 @@ app.use(express.urlencoded({ extended: true }));
 // let onlineUsers = [];
 let onlineUsers = [];
 let connectionId = null;
+let userIndex = null;
+let currentUser = null;
 // ===================================================
 // Получаем путь к текущей директории с помощью import.meta.url
 const __filename = fileURLToPath(import.meta.url);
@@ -148,44 +150,73 @@ io.on("connection", (socket) => {
     }
   });
   socket.on("userConnected", (name) => {
-    console.log(`User - ${name} - connected`);
-    const userIndex = onlineUsers.findIndex((user) => user.name === name);
-
+    userIndex = onlineUsers.findIndex((user) => user.name === name);
+    currentUser = onlineUsers[userIndex];
     if (userIndex == -1) {
       onlineUsers.push({ name: name, count: 0 });
     }
 
-    if (onlineUsers[userIndex] && connectionId == socket.id) {
-      onlineUsers[userIndex].count += 1;
+    if (currentUser && connectionId == socket.id) {
+      currentUser.count += 1;
     }
 
     connectionId = socket.id;
     console.log("====================");
+    console.log(`User - ${name} - connected`);
     console.log("connectionId:", connectionId);
     console.log("socket.id:", socket.id);
     console.log("userIndex:", userIndex);
     console.log("onlineUsers[userIndex]:", onlineUsers[userIndex]);
     console.log("Online users:", onlineUsers);
+    console.log("Current user:", currentUser);
     console.log("====================");
     io.emit("onlineUsers", onlineUsers);
   });
-  socket.on("disconnectUser", (name) => {
-    const user = onlineUsers.find((user) => user.name === name);
-    // console.log("user before disconnected", user, user.count);
-    if (user && user.count > 0) {
-      user.count -= 1;
+
+  // socket.on("disconnectUser", (name) => {
+  //   const user = onlineUsers.find((user) => user.name === name);
+  //   // console.log("user before disconnected", user, user.count);
+  //   if (user && user.count > 0) {
+  //     user.count -= 1;
+  //   }
+
+  //   if (user && user.count === 0) {
+  //     onlineUsers = onlineUsers.filter((user) => user.name !== name);
+  //   }
+  //   console.log(`User---${name}---- disconnected: `);
+  //   console.log("Online users:", onlineUsers);
+  //   io.emit("onlineUsers", onlineUsers);
+  // });
+
+  socket.on("disconnectUser", () => {
+    if (currentUser) {
+      if (currentUser.count > 0) {
+        currentUser.count -= 1;
+      }
+
+      if (currentUser.count === 0) {
+        onlineUsers = onlineUsers.filter((user) => user !== currentUser);
+      }
+      console.log(`User---${currentUser.name}---- disconnected: `);
     }
-    // console.log("user after disconnected", user, user.count);
-    if (user && user.count === 0) {
-      onlineUsers = onlineUsers.filter((user) => user.name !== name);
-    }
-    // console.log(onlineUsers);
+
+    console.log("Online users:", onlineUsers);
     io.emit("onlineUsers", onlineUsers);
   });
+
   socket.on("disconnect", () => {
-    console.log(`User disconnected: ${socket.id}`);
-    onlineUsers = onlineUsers.filter((user) => user.socketId !== socket.id);
-    io.emit("onlineUsers", onlineUsers); // Обновляем список онлайн-пользователей
+    // if (currentUser) {
+    //   console.log(`socket.id---${currentUser.name}--- disconnected `);
+
+    //   if (currentUser.count > 0) {
+    //     currentUser.count -= 1;
+    //   }
+
+    // if (currentUser && currentUser.count === 0) {
+    //   onlineUsers = onlineUsers.filter((user) => user !== currentUser);
+    // }
+    // }
+    io.emit("onlineUsers", onlineUsers);
   });
 });
 // ===================================
