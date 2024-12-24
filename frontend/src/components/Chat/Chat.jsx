@@ -8,13 +8,15 @@ import {
   IconButton,
   Button,
   TextField,
-  CircularProgress,
   CardMedia,
 } from "@mui/material";
 import SendIcon from "@mui/icons-material/Send";
 import { useSelector, useDispatch } from "react-redux";
 import AttachFileIcon from "@mui/icons-material/AttachFile";
 import "./Chat.scss";
+import OnlineUsers from "../OnlineUsers/OnlineUsers";
+import AllUsers from "../AllUsers/AllUsers";
+import Loading from "../Loading/Loading";
 // ==============================
 
 const Chat = () => {
@@ -28,10 +30,22 @@ const Chat = () => {
   // const [onlineUsers, setOnlineUsers] = useState([]);
   const socket = useSelector((state) => state.socket.socket);
   const onlineUsers = useSelector((state) => state.onlineUsers.onlineUsers);
+  const [showNoUsersMessage, setShowNoUsersMessage] = useState(false);
+
+  useEffect(() => {
+    if (onlineUsers.length === 0) {
+      const timeout = setTimeout(() => {
+        setShowNoUsersMessage(true);
+      }, 300);
+      return () => clearTimeout(timeout);
+    } else {
+      setShowNoUsersMessage(false);
+    }
+  }, [onlineUsers]);
   // =======================
   useEffect(() => {
     if (user && socket) {
-      socket.emit("userConnected", user.name);
+      socket.emit("userConnected", user);
     }
 
     // Загружаем сообщения с сервера
@@ -204,20 +218,11 @@ const Chat = () => {
   //  ============================
   return (
     <div>
-      <div className="OnlineUsers">
-        <Typography variant="h5">Online Users:</Typography>
-        <ul className="userInfo">
-          {onlineUsers.length > 0 ? (
-            onlineUsers.map((user, index) => (
-              <li key={index} className="userInfo-item">
-                {user.name}({user.count})
-              </li>
-            ))
-          ) : (
-            <Typography variant="body2">No users connected</Typography>
-          )}
-        </ul>
-      </div>
+      <AllUsers />
+      <OnlineUsers
+        onlineUsers={onlineUsers}
+        showNoUsersMessage={showNoUsersMessage}
+      />
       {messages.length > 0 ? (
         <List className="message-list">
           {messages &&
@@ -235,7 +240,6 @@ const Chat = () => {
       ) : (
         <Typography variant="h6">No messages yet</Typography>
       )}
-
       <Paper style={{ padding: "16px", marginTop: "16px" }}>
         <TextField
           fullWidth
@@ -261,7 +265,7 @@ const Chat = () => {
           <Typography variant="h5" color="error">
             {errorMessage}
           </Typography>
-          {!errorMessage && loading && <CircularProgress className="loading" />}
+          {!errorMessage && loading && <Loading />}
           <Button
             onClick={sendMessage}
             fullWidth

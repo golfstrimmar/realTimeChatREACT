@@ -31,6 +31,15 @@ const userSchema = new mongoose.Schema({
     enum: ["user", "admin"], // Роль может быть только "user" или "admin"
     default: "user", // Если роль не указана, то по умолчанию будет "user"
   },
+  correspondence: [
+    {
+      text: String,
+      from: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, // Ссылка на отправителя
+      to: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, // Ссылка на получателя
+      status: { type: String, enum: ["sent", "received"], required: true }, // Статус сообщения
+      timestamp: { type: Date, default: Date.now }, // Время отправки
+    },
+  ],
   createdAt: {
     type: Date,
     default: Date.now, // Дата создания пользователя

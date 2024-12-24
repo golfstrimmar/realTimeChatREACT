@@ -21,6 +21,7 @@ const ModalComponent = ({
     <Dialog
       open={open}
       onClose={handleCloseModal}
+      className="modalDialog"
       BackdropProps={{
         style: {
           backgroundColor: "rgba(0, 0, 0, 0.8)",
@@ -34,7 +35,7 @@ const ModalComponent = ({
       >
         <CloseIcon className="deliteCard" />
       </IconButton>
-      <DialogContent>
+      <DialogContent className="modalContent">
         {/* comment+ */}
         <TextField
           label="Add a comment"

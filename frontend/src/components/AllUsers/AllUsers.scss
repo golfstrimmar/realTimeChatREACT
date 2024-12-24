@@ -1,0 +1,14 @@
+@import '../../scss/common/colors.scss';
+
+.allUsers {
+  .userInfo-item {
+    background-color: $green;
+  }
+
+  &-list {
+    display: flex;
+    gap: 10px;
+    // &- {}
+    // &- {}
+  }
+}

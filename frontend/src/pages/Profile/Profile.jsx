@@ -10,20 +10,18 @@ import {
   Divider,
   CardMedia,
 } from "@mui/material";
-import axios from "axios";
+
 import "./Profile.scss";
 import { ReactComponent as AvatarSVG } from "../../assets/svg/avatar.svg";
 
+// ================================
 const Profile = () => {
-  const user = useSelector((state) => state.auth.user); // Получаем пользователя из Redux
-  const [orders, setOrders] = useState([]);
-  const token = useSelector((state) => state.auth.token); // Получаем JWT токен из Redux
-
-  // Формируем URL изображения, если оно есть у пользователя
+  const user = useSelector((state) => state.auth.user);
   const imageUrl = user?.picture
     ? `${process.env.REACT_APP_API_URL}${user.picture}` // Добавляем путь к серверу
     : null;
 
+  // ===================================
   if (!user) {
     return (
       <Container maxWidth="sm">
@@ -36,8 +34,9 @@ const Profile = () => {
     );
   }
 
+  // ===================================
   return (
-    <Container maxWidth="sm" className="pageContent">
+    <Box className="pageContent">
       <Box>
         <Paper
           sx={{
@@ -46,12 +45,11 @@ const Profile = () => {
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
-            mt: 4,
             mb: 4,
           }}
         >
           <Typography variant="h4" gutterBottom>
-            Profile
+            {user.name}
           </Typography>
 
           {user.picture ? (
@@ -71,15 +69,13 @@ const Profile = () => {
               style={{ width: 200, height: 200, borderRadius: "50%", m: 2 }}
             />
           )}
-          <Typography variant="h6" gutterBottom>
-            Name: {user.name}
-          </Typography>
+
           <Typography variant="h6" gutterBottom>
             Email: {user.email}
           </Typography>
-        </Paper>
+        </Paper>{" "}
       </Box>
-    </Container>
+    </Box>
   );
 };
 

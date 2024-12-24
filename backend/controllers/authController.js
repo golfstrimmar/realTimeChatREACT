@@ -103,7 +103,11 @@ export const loginUser = async (req, res) => {
 // Получение информации о текущем пользователе
 export const getUserProfile = async (req, res) => {
   try {
-    const user = await User.findById(req.user.id).select("-password"); // Не возвращаем пароль
+    const user = await User.findById(req.user.id)
+      .populate("correspondence.from", "name") // Подгружаем имя отправителя
+      .populate("correspondence.to", "name") // Подгружаем имя получателя
+      .select("-password"); // Не возвращаем пароль
+
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }

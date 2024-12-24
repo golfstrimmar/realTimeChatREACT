@@ -1,0 +1,33 @@
+@import '../../scss/common/colors.scss';
+.modalDialog {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 99999;
+  overflow: auto;
+  overflow-y: auto;
+}
+
+.closeModal {
+  position: absolute !important;
+  left: auto;
+  top: 10px;
+  right: 10px;
+  cursor: pointer;
+  width: 15px;
+  height: 15px;
+}
+
+.modalContent {
+  padding: 20px 40px 10px 20px !important;
+
+}
+
+.messageText {
+  padding: 5px !important;
+  border-radius: 5px;
+  background-color: $blue;
+  color: white;
+}

@@ -35,10 +35,6 @@ router.post(
 // ======
 router.post("/google", googleLogin);
 // ======
-// Получение данных профиля пользователя (защищенный маршрут)
-router.get("/profile", protect, getUserProfile);
-
-// Получение данных профиля пользователя (защищенный маршрут)
 router.get("/profile", protect, getUserProfile);
 
 export default router;

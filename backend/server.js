@@ -6,9 +6,10 @@ import multer from "multer";
 import { Server } from "socket.io";
 import { connectDB } from "./config/db.js";
 import cors from "cors";
-import messageRoutes from "./routes/messageRoutes.js"; // Подключаем маршруты для сообщений
+import messageRoutes from "./routes/messageRoutes.js";
 // import { sendMessage } from "./controllers/messageController.js";
 import Message from "./models/Message.js";
+import User from "./models/User.js";
 import authRoutes from "./routes/authRoutes.js";
 import { fileURLToPath } from "url";
 import path from "path";
@@ -149,11 +150,11 @@ io.on("connection", (socket) => {
       console.error("Error deleting message:", error);
     }
   });
-  socket.on("userConnected", (name) => {
-    userIndex = onlineUsers.findIndex((user) => user.name === name);
+  socket.on("userConnected", (user) => {
+    userIndex = onlineUsers.findIndex((el) => el.user.id === user.id);
     currentUser = onlineUsers[userIndex];
     if (userIndex == -1) {
-      onlineUsers.push({ name: name, count: 0 });
+      onlineUsers.push({ user: user, count: 0 });
     }
 
     if (currentUser && connectionId == socket.id) {
@@ -162,60 +163,117 @@ io.on("connection", (socket) => {
 
     connectionId = socket.id;
     console.log("====================");
-    console.log(`User - ${name} - connected`);
+    console.log(`User - ${user.name} - connected`);
     console.log("connectionId:", connectionId);
     console.log("socket.id:", socket.id);
-    console.log("userIndex:", userIndex);
-    console.log("onlineUsers[userIndex]:", onlineUsers[userIndex]);
     console.log("Online users:", onlineUsers);
     console.log("Current user:", currentUser);
     console.log("====================");
+    // onlineUsers = onlineUsers.filter((el) => el.count !== 0);
     io.emit("onlineUsers", onlineUsers);
   });
 
-  // socket.on("disconnectUser", (name) => {
-  //   const user = onlineUsers.find((user) => user.name === name);
-  //   // console.log("user before disconnected", user, user.count);
-  //   if (user && user.count > 0) {
-  //     user.count -= 1;
-  //   }
-
-  //   if (user && user.count === 0) {
-  //     onlineUsers = onlineUsers.filter((user) => user.name !== name);
-  //   }
-  //   console.log(`User---${name}---- disconnected: `);
-  //   console.log("Online users:", onlineUsers);
-  //   io.emit("onlineUsers", onlineUsers);
-  // });
-
-  socket.on("disconnectUser", () => {
-    if (currentUser) {
-      if (currentUser.count > 0) {
-        currentUser.count -= 1;
-      }
-
-      if (currentUser.count === 0) {
-        onlineUsers = onlineUsers.filter((user) => user !== currentUser);
-      }
-      console.log(`User---${currentUser.name}---- disconnected: `);
+  socket.on("disconnectUser", (user) => {
+    console.log("****Online users (disconnectUser):****", onlineUsers);
+    const current = onlineUsers.find((el) => el.user.id === user.id);
+    if (current && current.count > 0) {
+      current.count -= 1;
     }
-
-    console.log("Online users:", onlineUsers);
+    if (current && current.count === 0) {
+      onlineUsers = onlineUsers.filter((el) => el.user.id !== current.user.id);
+    }
+    console.log(`User---${user.name}---- disconnected: `);
+    console.log("****Online users (disconnectUser):****", onlineUsers);
     io.emit("onlineUsers", onlineUsers);
+  });
+  socket.on("sendPrivatMessage", async (data) => {
+    const { text, from, to } = data;
+    // console.log("text:", text);
+    // console.log("from:", from);
+    // console.log("to:", to);
+    try {
+      // Сохраняем сообщение в поле `correspondence` отправителя
+      const sender = await User.findById(from.id);
+      console.log("sender:", sender);
+      sender.correspondence.push({
+        text,
+        from: from.id,
+        to: to.id,
+        status: "sent", // Статус для отправленного сообщения
+      });
+      await sender.save();
+
+      // Сохраняем сообщение в поле `correspondence` получателя
+      const receiver = await User.findById(to._id);
+      console.log("receiver:", receiver);
+      receiver.correspondence.push({
+        text,
+        from: from.id,
+        to: to._id,
+        status: "received", // Статус для полученного сообщения
+      });
+      await receiver.save();
+
+      console.log("Private message saved:", data);
+      const updatedSender = await User.findById(from.id)
+        .populate("correspondence.from", "name")
+        .populate("correspondence.to", "name")
+        .select("-password");
+      const updatedReceiver = await User.findById(to._id)
+        .populate("correspondence.from", "name")
+        .populate("correspondence.to", "name")
+        .select("-password");
+
+      io.emit("UserData", updatedSender);
+      io.emit("UserData", updatedReceiver);
+
+      // Если получатель онлайн, отправляем сообщение через сокет
+      // const receiverUser = onlineUsers.find((el) => el.user.id === to.id);
+      // if (receiverUser) {
+      // io.to(receiverUser.socketId).emit("newMessageNotification", {
+      //   text,
+      //   from,
+      //   to,
+      // });
+      io.emit("newMessageNotification", {
+        text,
+        from,
+        to,
+      });
+      // } else {
+      //   console.log("Receiver is offline, message will be fetched later");
+      // }
+    } catch (error) {
+      console.error("Error saving private message:", error);
+    }
+  });
+
+  socket.on("allUsers", async () => {
+    try {
+      const users = await User.find().select("-password");
+      io.emit("Users", users);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      socket.emit("error", "Unable to fetch users");
+    }
+  });
+  socket.on("User", async (id) => {
+    try {
+      console.log("user", id);
+      const userToFind = await User.findById(id)
+        .populate("correspondence.from", "name")
+        .populate("correspondence.to", "name")
+        .select("-password");
+
+      io.emit("UserData", userToFind);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      socket.emit("error", "Unable to fetch users");
+    }
   });
 
   socket.on("disconnect", () => {
-    // if (currentUser) {
-    //   console.log(`socket.id---${currentUser.name}--- disconnected `);
-
-    //   if (currentUser.count > 0) {
-    //     currentUser.count -= 1;
-    //   }
-
-    // if (currentUser && currentUser.count === 0) {
-    //   onlineUsers = onlineUsers.filter((user) => user !== currentUser);
-    // }
-    // }
+    // onlineUsers = onlineUsers.filter((el) => el.count !== 0);
     io.emit("onlineUsers", onlineUsers);
   });
 });
@@ -225,7 +283,6 @@ app.use("/messages", upload.none(), messageRoutes);
 // ===================================================
 app.use("/auth", upload.none(), authRoutes);
 // ===================================================
-
 // ===================================================
 // Запуск сервера
 const PORT = process.env.PORT || 5000;

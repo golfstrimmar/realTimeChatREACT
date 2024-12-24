@@ -25,11 +25,12 @@ import { ReactComponent as Socket } from "../../assets/svg/socket.svg";
 import MenuIcon from "@mui/icons-material/Menu";
 import HomeIcon from "@mui/icons-material/Home";
 import LoginIcon from "@mui/icons-material/Login";
-import AccountCircleIcon from "@mui/icons-material/AccountCircle";
+// import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import AppRegistrationIcon from "@mui/icons-material/AppRegistration";
 import { setUser } from "../../redux/actions/authActions";
 import { restoreAuth } from "../../redux/actions/authActions";
 import "./Header.scss";
+import ChatBubbleIcon from "@mui/icons-material/ChatBubble";
 // =====================
 
 const Header = () => {
@@ -84,8 +85,7 @@ const Header = () => {
   //======================================
   const handleLogout = () => {
     console.log("logout", user);
-    // socket.emit("disconnectUser", user.name);
-    socket.emit("disconnectUser");
+    socket.emit("disconnectUser", user);
     localStorage.removeItem("user");
     dispatch(setUser(null, null));
     navigate("/");
@@ -288,30 +288,17 @@ const Header = () => {
               >
                 <HomeIcon sx={{ mr: 1 }} /> Home
               </MenuItem>
-              {/* <MenuItem
-                component={Link}
-                to="/login"
-                onClick={handleCloseMenu}
-                style={getActiveLinkStyle("/login")}
-              >
-                <LoginIcon sx={{ mr: 1 }} /> Login
-              </MenuItem>
-              <MenuItem
-                component={Link}
-                to="/register"
-                onClick={handleCloseMenu}
-                style={getActiveLinkStyle("/register")}
-              >
-                <AppRegistrationIcon sx={{ mr: 1 }} /> Registration
-              </MenuItem>
-              <MenuItem
-                component={Link}
-                to="/profile"
-                onClick={handleCloseMenu}
-                style={getActiveLinkStyle("/profile")}
-              >
-                <AccountCircleIcon sx={{ mr: 1 }} /> Profile
-              </MenuItem> */}
+              {user && (
+                <MenuItem
+                  component={Link}
+                  to="/personal"
+                  onClick={handleCloseMenu}
+                  style={getActiveLinkStyle("/personal")}
+                >
+                  <ChatBubbleIcon sx={{ mr: 1 }} /> Personal
+                </MenuItem>
+              )}
+
               {!user && (
                 <div>
                   <MenuItem
@@ -352,6 +339,16 @@ const Header = () => {
               <HomeIcon sx={{ mr: 1 }} /> Home
             </MenuItem>
 
+            {user && (
+              <MenuItem
+                component={Link}
+                to="/personal"
+                onClick={handleCloseMenu}
+                style={getActiveLinkStyle("/personal")}
+              >
+                <ChatBubbleIcon sx={{ mr: 1 }} /> Personal
+              </MenuItem>
+            )}
             {!user ? (
               <>
                 <MenuItem
