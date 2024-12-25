@@ -1,33 +1,60 @@
 @import "../../scss/common/colors.scss";
 
 .privat {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, 48%);
-  gap: 20px;
-  justify-content: center;
+  // display: grid;
+  // grid-template-columns: repeat(auto-fill, 48%);
+  // gap: 20px;
+  // justify-content: center;
+
+
+  &-title {
+    font-weight: 700 !important;
+    margin: 0 0 20px 0 !important;
+  }
+
+  &-text {
+    margin: 10px 0 !important;
+    padding: 5px !important;
+    border-radius: 5px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+  }
+
+  &-item {
+    border-bottom: 1px solid $a3;
+    margin: 0 0 10px 0;
+    padding: 5px !important;
+
+    &._is-received {
+      .privat-text {
+        background-color: $l;
+      }
+    }
+
+    &._is-sent {
+      .privat-text {
+        background-color: $o;
+      }
+
+      margin-left: 30px;
+
+    }
+
+  }
+
+
+
+  &-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  &-button {
+    width: fit-content;
+    margin-top: 0 !important;
+  }
 
   @media (max-width: 768px) {
     grid-template-columns: 1fr;
   }
-}
-
-
-.privat-title {
-  font-weight: 700 !important;
-  margin: 0 0 20px 0 !important;
-}
-
-.privat-item {
-  border-bottom: 1px solid $a3;
-  margin: 0 0 20px 0;
-  padding: 10px !important;
-}
-
-.privat-text {
-  margin: 10px 0 !important;
-  padding: 5px !important;
-  border-radius: 5px;
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  background-color: $blue;
-
 }

@@ -2,33 +2,34 @@ netstat -ano | findstr :3000
 netstat -ano | findstr :5000
 taskkill /F /PID 12484
 taskkill /F /PID 12484
-taskkill /F /PID 9752 
+taskkill /F /PID 9752
 taskkill /F /PID 10400
-taskkill /F /PID 
-taskkill /F /PID 
-taskkill /F /PID 
-taskkill /F /PID 
+taskkill /F /PID
+taskkill /F /PID
+taskkill /F /PID
+taskkill /F /PID
+
 # удаление комментов
 
 edit-find-replace
 поиск
-(.*?)(\/\/.*)
+(._?)(\/\/._)
 замена
 $1
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+// axios
+// .get(`${process.env.REACT_APP_API_URL}/auth/profile`, {
+// headers: {
+// Authorization: `Bearer ${token}`,
+// },
+// })
+// .then((response) => {
+// const correspon = response.data.correspondence;
+// setPrivat(correspon);
+// })
+// .catch((error) => {
+// console.log("Error privat:", error);
+// });
 
 # Getting Started with Create React App
 

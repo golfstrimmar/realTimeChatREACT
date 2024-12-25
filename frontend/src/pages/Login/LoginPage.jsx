@@ -1,12 +1,12 @@
 import React, { useState } from "react";
-import { useDispatch } from "react-redux";
 import { setUser } from "../../redux/actions/authActions";
 import "./Login.scss";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { TextField, Button, Typography, Container, Box } from "@mui/material";
 import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
-
+import { useSelector, useDispatch } from "react-redux";
+import { setOnlineUsers } from "../../redux/actions/onlineUsersActions";
 // ======================
 const Login = () => {
   const dispatch = useDispatch();
@@ -18,7 +18,7 @@ const Login = () => {
   const [errors, setErrors] = useState({});
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
-
+  const socket = useSelector((state) => state.socket.socket);
   // ---------------------------------------
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -53,6 +53,10 @@ const Login = () => {
         localStorage.setItem("user", JSON.stringify(user));
         dispatch(setUser(user, token));
         setSuccessMessage("Login successful");
+        socket.emit("userConnected", user, socket.id);
+        socket.on("onlineUsers", (users) => {
+          dispatch(setOnlineUsers(users));
+        });
         setTimeout(() => {
           navigate("/");
         }, 1000);

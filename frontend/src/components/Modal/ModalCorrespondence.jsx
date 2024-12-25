@@ -44,7 +44,7 @@ const ModalCorrespondence = ({
       from: user,
       to: addressee,
     };
-    console.log("privat message:", data);
+    console.log("privat message to send:", data);
     socket.emit("sendPrivatMessage", data);
   };
 

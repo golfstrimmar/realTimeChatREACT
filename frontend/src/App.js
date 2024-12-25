@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, { use, useEffect, useState } from "react";
 import { BrowserRouter as Router } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { setSocket } from "./redux/actions/socketActions";
 import { restoreAuth, setUser } from "./redux/actions/authActions";
 import { setOnlineUsers } from "./redux/actions/onlineUsersActions";
+import { setAllUsers } from "./redux/actions/AllUsersActions";
 import { io } from "socket.io-client"; // Библиотека для сокетов
 import AppRouter from "./router/AppRouter";
 import Header from "./components/Header/Header";
@@ -11,6 +12,9 @@ const serverUrl = process.env.REACT_APP_API_URL;
 
 function App() {
   const dispatch = useDispatch();
+  const user = useSelector((state) => state.auth.user);
+  // const socket = useSelector((state) => state.socket.socket);
+
   // ------------------------
   // const socket = useSelector((state) => state.socket.socket);
 
@@ -25,11 +29,15 @@ function App() {
   // };
   // window.addEventListener("beforeunload", handleBeforeUnload);
   // ------------------------
+
+  // socket.emit("userConnected", user.id, socket.id);
+  // ------------------------
   useEffect(() => {
     // dispatch(setSocket(null));
     dispatch(restoreAuth());
     let socket = window.socketInstance;
-    if (!socket) {
+
+    if (!window.socketInstance) {
       socket = io(serverUrl, {
         autoConnect: true,
         reconnection: true,
@@ -40,14 +48,26 @@ function App() {
       window.socketInstance = socket;
     }
 
-    dispatch(setSocket(socket));
-    socket.on("onlineUsers", (users) => {
-      dispatch(setOnlineUsers(users));
+    window.socketInstance.on("connect", () => {
+      console.log("Socket connected with id:", window.socketInstance.id);
+      dispatch(setSocket(window.socketInstance));
+      window.socketInstance.emit("allUsers");
+      window.socketInstance.on("Users", (users) => {
+        dispatch(setAllUsers(users));
+      });
+
+      window.socketInstance.on("onlineUsers", (users) => {
+        dispatch(setOnlineUsers(users));
+      });
+      if (user) {
+        window.socketInstance.emit(
+          "userConnected",
+          user,
+          window.socketInstance.id
+        );
+      }
     });
 
-    // ================================
-
-    // ================================
     return () => {
       if (socket) {
         socket.disconnect();

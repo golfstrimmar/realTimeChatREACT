@@ -27,27 +27,10 @@ const Chat = () => {
   const [errorMessage, setErrorMessage] = useState("");
   const [fileURL, setFileURL] = useState(null);
   const [loading, setLoading] = useState(false);
-  // const [onlineUsers, setOnlineUsers] = useState([]);
   const socket = useSelector((state) => state.socket.socket);
-  const onlineUsers = useSelector((state) => state.onlineUsers.onlineUsers);
-  const [showNoUsersMessage, setShowNoUsersMessage] = useState(false);
 
-  useEffect(() => {
-    if (onlineUsers.length === 0) {
-      const timeout = setTimeout(() => {
-        setShowNoUsersMessage(true);
-      }, 300);
-      return () => clearTimeout(timeout);
-    } else {
-      setShowNoUsersMessage(false);
-    }
-  }, [onlineUsers]);
   // =======================
   useEffect(() => {
-    if (user && socket) {
-      socket.emit("userConnected", user);
-    }
-
     // Загружаем сообщения с сервера
     axios
       .get(`${process.env.REACT_APP_API_URL}/messages`)
@@ -219,10 +202,7 @@ const Chat = () => {
   return (
     <div>
       <AllUsers />
-      <OnlineUsers
-        onlineUsers={onlineUsers}
-        showNoUsersMessage={showNoUsersMessage}
-      />
+      <OnlineUsers />
       {messages.length > 0 ? (
         <List className="message-list">
           {messages &&

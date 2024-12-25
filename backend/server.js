@@ -14,7 +14,7 @@ import authRoutes from "./routes/authRoutes.js";
 import { fileURLToPath } from "url";
 import path from "path";
 import fs from "fs";
-
+const userSocketMap = {};
 // ===================================
 const upload = multer();
 dotenv.config();
@@ -150,26 +150,29 @@ io.on("connection", (socket) => {
       console.error("Error deleting message:", error);
     }
   });
-  socket.on("userConnected", (user) => {
+  socket.on("userConnected", (user, socketId) => {
+    console.log(user.id, socketId);
+    userSocketMap[user.id] = socketId;
     userIndex = onlineUsers.findIndex((el) => el.user.id === user.id);
     currentUser = onlineUsers[userIndex];
+    connectionId = socket.id;
     if (userIndex == -1) {
-      onlineUsers.push({ user: user, count: 0 });
+      onlineUsers.push({ user: user, count: 1 });
     }
 
-    if (currentUser && connectionId == socket.id) {
+    if (userIndex == 0 && currentUser && connectionId == socket.id) {
       currentUser.count += 1;
     }
-
-    connectionId = socket.id;
-    console.log("====================");
-    console.log(`User - ${user.name} - connected`);
-    console.log("connectionId:", connectionId);
-    console.log("socket.id:", socket.id);
-    console.log("Online users:", onlineUsers);
-    console.log("Current user:", currentUser);
-    console.log("====================");
+    // connectionId = socket.id;
     // onlineUsers = onlineUsers.filter((el) => el.count !== 0);
+    console.log("====================");
+    console.log(
+      `User connected -name: ${user.name} - connectionId: ${connectionId} -socket.id: ${socket.id}`
+    );
+    console.log("Current user:", currentUser);
+    console.log("Online users:", onlineUsers);
+    console.log("====================");
+
     io.emit("onlineUsers", onlineUsers);
   });
 
@@ -188,29 +191,27 @@ io.on("connection", (socket) => {
   });
   socket.on("sendPrivatMessage", async (data) => {
     const { text, from, to } = data;
-    // console.log("text:", text);
-    // console.log("from:", from);
-    // console.log("to:", to);
+    console.log("text:", text);
+    console.log("from:", from);
+    console.log("to:", to);
     try {
-      // Сохраняем сообщение в поле `correspondence` отправителя
       const sender = await User.findById(from.id);
       console.log("sender:", sender);
       sender.correspondence.push({
         text,
         from: from.id,
-        to: to.id,
-        status: "sent", // Статус для отправленного сообщения
+        to: to._id,
+        status: "sent",
       });
       await sender.save();
 
-      // Сохраняем сообщение в поле `correspondence` получателя
       const receiver = await User.findById(to._id);
       console.log("receiver:", receiver);
       receiver.correspondence.push({
         text,
         from: from.id,
         to: to._id,
-        status: "received", // Статус для полученного сообщения
+        status: "received",
       });
       await receiver.save();
 
@@ -224,25 +225,14 @@ io.on("connection", (socket) => {
         .populate("correspondence.to", "name")
         .select("-password");
 
-      io.emit("UserData", updatedSender);
-      io.emit("UserData", updatedReceiver);
+      io.to(userSocketMap[from.id]).emit("UserData", updatedSender);
+      io.to(userSocketMap[to._id]).emit("UserData", updatedReceiver);
 
-      // Если получатель онлайн, отправляем сообщение через сокет
-      // const receiverUser = onlineUsers.find((el) => el.user.id === to.id);
-      // if (receiverUser) {
-      // io.to(receiverUser.socketId).emit("newMessageNotification", {
-      //   text,
-      //   from,
-      //   to,
-      // });
       io.emit("newMessageNotification", {
         text,
         from,
         to,
       });
-      // } else {
-      //   console.log("Receiver is offline, message will be fetched later");
-      // }
     } catch (error) {
       console.error("Error saving private message:", error);
     }
@@ -259,13 +249,29 @@ io.on("connection", (socket) => {
   });
   socket.on("User", async (id) => {
     try {
-      console.log("user", id);
       const userToFind = await User.findById(id)
         .populate("correspondence.from", "name")
         .populate("correspondence.to", "name")
         .select("-password");
 
-      io.emit("UserData", userToFind);
+      console.log("userToFind", userToFind);
+      io.to(socket.id).emit("UserData", userToFind);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      socket.emit("error", "Unable to fetch users");
+    }
+  });
+
+  socket.on("ClearChat", async (idUser, idReciver) => {
+    try {
+      const user = await User.findById(idUser).select("-password");
+      const reciver = await User.findById(idReciver).select("-password");
+      user.correspondence = [];
+      reciver.correspondence = [];
+      await user.save();
+      await reciver.save();
+      io.emit("UserData", user);
+      io.emit("UserData", reciver);
     } catch (error) {
       console.error("Error fetching users:", error);
       socket.emit("error", "Unable to fetch users");
@@ -274,6 +280,13 @@ io.on("connection", (socket) => {
 
   socket.on("disconnect", () => {
     // onlineUsers = onlineUsers.filter((el) => el.count !== 0);
+    // for (let userId in userSocketMap) {
+    //   if (userSocketMap[userId] === socket.id) {
+    //     delete userSocketMap[userId];
+    //     break;
+    //   }
+    // }
+    // console.log("userSocketMap", userSocketMap);
     io.emit("onlineUsers", onlineUsers);
   });
 });

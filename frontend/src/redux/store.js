@@ -2,6 +2,7 @@ import { combineReducers, createStore, applyMiddleware, compose } from "redux";
 import authReducer from "./reducers/authReducer";
 import socketReducer from "./reducers/socketReducer";
 import onlineUsersReducer from "./reducers/onlineUsersReducer";
+import AllUsersReducer from "./reducers/AllUsersReducer";
 // =============================================
 const localStorageAuthMiddleware = (store) => (next) => (action) => {
   const result = next(action);
@@ -23,6 +24,7 @@ const rootReducer = combineReducers({
   auth: authReducer,
   socket: socketReducer,
   onlineUsers: onlineUsersReducer,
+  allUsers: AllUsersReducer,
 });
 
 // =============================================

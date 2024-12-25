@@ -1,59 +1,75 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import "./Personal.scss";
-import { useSelector, useDispatch } from "react-redux";
+import { useSelector } from "react-redux";
 import { Typography } from "@mui/material";
 import Privat from "../../components/Privat/Privat";
-import axios from "axios";
 import Loading from "../../components/Loading/Loading";
 const Personal = () => {
   const user = useSelector((state) => state.auth.user);
-  const token = useSelector((state) => state.auth.token);
+  const allUsers = useSelector((state) => state.allUsers.allUsers);
   const socket = useSelector((state) => state.socket.socket);
-  const [usersAll, setAllUsers] = useState([]);
-  const [activeTab, setActiveTab] = useState("admin");
-  const [privat, setPrivat] = useState([]);
-  const [resiver, setResiver] = useState(null);
+  const [activeTab, setActiveTab] = useState(null);
+  const [open, setOpen] = useState(false);
+  const [privat, setPrivat] = useState("");
+  const [persona, setPersona] = useState(null);
+  const [dataMessage, setDataMessage] = useState(null);
   // =============================
-  useEffect(() => {
-    if (socket) {
-      socket.emit("allUsers");
-      socket.on("Users", (users) => {
-        setAllUsers(users);
-      });
-    }
-  }, [socket]);
-  // ==========================
   const handleOpenTab = (persona) => {
-    setActiveTab(persona.name);
-    setResiver(persona);
-  };
-  // ==========================
-
-  // ===================================
-  useEffect(() => {
-    if (user && token) {
-      socket.emit("User", user.id);
-      socket.on("UserData", (user) => {
-        setPrivat(user.correspondence);
-      });
+    setPersona(persona);
+    setOpen(false);
+    if (activeTab && activeTab._id === persona._id) {
+      setActiveTab(null);
+      return;
     }
-  }, [user, token, socket, activeTab]);
+    try {
+      socket.emit("User", user?.id);
+      socket.off("UserData");
+      socket.on("UserData", (data) => {
+        const temp = data.correspondence;
+        const correspondence = temp.filter((message) => {
+          const toId = message.to ? message.to._id : null;
+          const fromId = message.from ? message.from._id : null;
+          return toId === persona?._id || fromId === persona?._id;
+        });
+        setPrivat(correspondence);
+        setActiveTab(persona);
+      });
+    } catch (err) {
+      console.error("Error emitting 'User' event:", err);
+    }
 
-  // axios
-  //   .get(`${process.env.REACT_APP_API_URL}/auth/profile`, {
-  //     headers: {
-  //       Authorization: `Bearer ${token}`,
-  //     },
-  //   })
-  //   .then((response) => {
-  //     const correspon = response.data.correspondence;
-  //     setPrivat(correspon);
-  //   })
-  //   .catch((error) => {
-  //     console.log("Error privat:", error);
-  //   });
+    setTimeout(() => {
+      setOpen(true);
+    }, 200);
+  };
 
   // ==========================
+  useEffect(() => {
+    console.log("dataMessage:", dataMessage);
+    if (dataMessage) {
+      try {
+        socket.off("UserData");
+        socket.emit("sendPrivatMessage", dataMessage);
+        socket.on("UserData", (data) => {
+          const temp = data.correspondence;
+          const correspondence = temp.filter((message) => {
+            const toId = message.to ? message.to._id : null;
+            const fromId = message.from ? message.from._id : null;
+            return toId === persona?._id || fromId === persona?._id;
+          });
+          setPrivat(correspondence);
+          setActiveTab(persona);
+        });
+      } catch (err) {
+        console.error("Error emitting 'User' event:", err);
+      }
+    }
+  }, [dataMessage]);
+  // ==========================
+  useEffect(() => {
+    console.log("activeTab", activeTab);
+  }, [activeTab]);
+  // ===================================
   if (!user) {
     return <Loading />;
   }
@@ -63,43 +79,47 @@ const Personal = () => {
       <div className="personal-body">
         <div className="personal-menu">
           {socket &&
-            usersAll
+            allUsers &&
+            allUsers
               .filter((u) => u.name !== user.name)
-              .map(
-                (user, index) =>
-                  activeTab && (
-                    <li
-                      key={index}
-                      onClick={() => handleOpenTab(user)}
-                      className={`personal-menu-item ${activeTab === user.name ? " _is-active" : ""}`}
-                    >
-                      <Typography
-                        variant="h6"
-                        className="personal-menu-item-name"
-                      >
-                        {user.name}
-                      </Typography>
-                      <Typography
-                        variant="p"
-                        className="personal-menu-item-email"
-                      >
-                        {user.email}
-                      </Typography>
-                      <Typography
-                        variant="p"
-                        className="personal-menu-item-role"
-                      >
-                        {user.role}
-                      </Typography>
-                    </li>
-                  )
-              )}
+              .map((item, index) => (
+                <li
+                  key={index}
+                  onClick={() => handleOpenTab(item)}
+                  className={`personal-menu-item ${activeTab?.name === item.name ? " _is-active" : ""}`}
+                >
+                  <Typography variant="h6" className="personal-menu-item-name">
+                    {item.name}
+                  </Typography>
+                  <Typography variant="p" className="personal-menu-item-email">
+                    {item.email}
+                  </Typography>
+                  <Typography variant="p" className="personal-menu-item-role">
+                    {item.role}
+                  </Typography>
+                </li>
+              ))}
         </div>
-        {activeTab && activeTab !== user.name && (
+        {/* {activeTab && activeTab !== user.name && (
           <div className="personal-plaza">
-            <Privat privat={privat} resiver={resiver} />
+            <Privat resiver={resiver} />
           </div>
-        )}
+        )} */}
+        <div className="personal-plaza">
+          {
+            socket && (
+              <div className={`Privat ${open ? " _is-open" : ""}`}>
+                <Privat
+                  open={open}
+                  privat={privat}
+                  persona={persona}
+                  setDataMessage={setDataMessage}
+                />
+              </div>
+            )
+            // ))
+          }
+        </div>
       </div>
     </section>
   );

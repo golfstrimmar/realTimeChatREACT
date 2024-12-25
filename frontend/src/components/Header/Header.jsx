@@ -90,7 +90,6 @@ const Header = () => {
     dispatch(setUser(null, null));
     navigate("/");
   };
-
   // =============Открытие меню на мобильных устройствах
   const handleOpenMenu = (event) => {
     setAnchormobEl(event.currentTarget);
@@ -349,6 +348,7 @@ const Header = () => {
                 <ChatBubbleIcon sx={{ mr: 1 }} /> Personal
               </MenuItem>
             )}
+            {user && <span>{user.name}</span>}
             {!user ? (
               <>
                 <MenuItem
