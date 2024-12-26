@@ -13,8 +13,24 @@ const Personal = () => {
   const [privat, setPrivat] = useState("");
   const [persona, setPersona] = useState(null);
   const [dataMessage, setDataMessage] = useState(null);
+  const [goPrivat, setGoPrivat] = useState(null);
   // =============================
+
+  useEffect(() => {
+    console.log("allUsers", allUsers);
+    const data = localStorage.getItem("GoPrivat");
+    if (data) {
+      console.log("data:", data);
+      setPersona(data);
+      handleOpenTab(data);
+      setActiveTab(data);
+      setOpen(true);
+    }
+  }, []);
+  // =============================
+
   const handleOpenTab = (persona) => {
+    console.log("activeTab", activeTab);
     setPersona(persona);
     setOpen(false);
     if (activeTab && activeTab._id === persona._id) {
@@ -26,12 +42,14 @@ const Personal = () => {
       socket.off("UserData");
       socket.on("UserData", (data) => {
         const temp = data.correspondence;
-        const correspondence = temp.filter((message) => {
-          const toId = message.to ? message.to._id : null;
-          const fromId = message.from ? message.from._id : null;
-          return toId === persona?._id || fromId === persona?._id;
-        });
-        setPrivat(correspondence);
+        if (temp) {
+          const correspondence = temp.filter((message) => {
+            const toId = message.to ? message.to._id : null;
+            const fromId = message.from ? message.from._id : null;
+            return toId === persona?._id || fromId === persona?._id;
+          });
+          setPrivat(correspondence);
+        }
         setActiveTab(persona);
       });
     } catch (err) {

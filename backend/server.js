@@ -14,7 +14,7 @@ import authRoutes from "./routes/authRoutes.js";
 import { fileURLToPath } from "url";
 import path from "path";
 import fs from "fs";
-const userSocketMap = {};
+
 // ===================================
 const upload = multer();
 dotenv.config();
@@ -28,6 +28,7 @@ let onlineUsers = [];
 let connectionId = null;
 let userIndex = null;
 let currentUser = null;
+let userSocketMap = [];
 // ===================================================
 // Получаем путь к текущей директории с помощью import.meta.url
 const __filename = fileURLToPath(import.meta.url);
@@ -71,16 +72,17 @@ app.use(
 //   );
 //   next();
 // });
-// ===================================
-io.on("connection", (socket) => {
-  console.log(`**Connection id:** ${socket.id}`);
 
-  socket.on("disconnect", () => {
-    console.log(`**Connection interrapted:** ${socket.id}`);
-  });
-});
 // ===================================
 io.on("connection", (socket) => {
+  console.log(`*******************************************************`);
+  console.log(`**Connection id:** ${socket.id}`);
+  console.log("**userSocketMap**", userSocketMap);
+  console.log(
+    "**Online users:**",
+    onlineUsers.map((el) => ({ name: el.user?.name, count: el?.count }))
+  );
+  // =================================================
   socket.emit("receiveMessages");
   socket.emit("onlineUsers", onlineUsers);
   socket.on("sendMessage", async (msg) => {
@@ -150,53 +152,10 @@ io.on("connection", (socket) => {
       console.error("Error deleting message:", error);
     }
   });
-  socket.on("userConnected", (user, socketId) => {
-    console.log(user.id, socketId);
-    userSocketMap[user.id] = socketId;
-    userIndex = onlineUsers.findIndex((el) => el.user.id === user.id);
-    currentUser = onlineUsers[userIndex];
-    connectionId = socket.id;
-    if (userIndex == -1) {
-      onlineUsers.push({ user: user, count: 1 });
-    }
-
-    if (userIndex == 0 && currentUser && connectionId == socket.id) {
-      currentUser.count += 1;
-    }
-    // connectionId = socket.id;
-    // onlineUsers = onlineUsers.filter((el) => el.count !== 0);
-    console.log("====================");
-    console.log(
-      `User connected -name: ${user.name} - connectionId: ${connectionId} -socket.id: ${socket.id}`
-    );
-    console.log("Current user:", currentUser);
-    console.log("Online users:", onlineUsers);
-    console.log("====================");
-
-    io.emit("onlineUsers", onlineUsers);
-  });
-
-  socket.on("disconnectUser", (user) => {
-    console.log("****Online users (disconnectUser):****", onlineUsers);
-    const current = onlineUsers.find((el) => el.user.id === user.id);
-    if (current && current.count > 0) {
-      current.count -= 1;
-    }
-    if (current && current.count === 0) {
-      onlineUsers = onlineUsers.filter((el) => el.user.id !== current.user.id);
-    }
-    console.log(`User---${user.name}---- disconnected: `);
-    console.log("****Online users (disconnectUser):****", onlineUsers);
-    io.emit("onlineUsers", onlineUsers);
-  });
   socket.on("sendPrivatMessage", async (data) => {
     const { text, from, to } = data;
-    console.log("text:", text);
-    console.log("from:", from);
-    console.log("to:", to);
     try {
       const sender = await User.findById(from.id);
-      console.log("sender:", sender);
       sender.correspondence.push({
         text,
         from: from.id,
@@ -206,7 +165,6 @@ io.on("connection", (socket) => {
       await sender.save();
 
       const receiver = await User.findById(to._id);
-      console.log("receiver:", receiver);
       receiver.correspondence.push({
         text,
         from: from.id,
@@ -225,8 +183,17 @@ io.on("connection", (socket) => {
         .populate("correspondence.to", "name")
         .select("-password");
 
-      io.to(userSocketMap[from.id]).emit("UserData", updatedSender);
-      io.to(userSocketMap[to._id]).emit("UserData", updatedReceiver);
+      let fromSocket = userSocketMap.filter((el) => el.user === from.id);
+      let toSocket = userSocketMap.filter((el) => el.user === to._id);
+
+      fromSocket.forEach((el) => {
+        io.to(el.socket).emit("UserData", updatedSender);
+        console.log(`сообщение отправлено в сокет ${el.socket}`);
+      });
+      toSocket.forEach((el) => {
+        io.to(el.socket).emit("UserData", updatedReceiver);
+        console.log(`сообщение отправлено в сокет ${el.socket}`);
+      });
 
       io.emit("newMessageNotification", {
         text,
@@ -237,7 +204,6 @@ io.on("connection", (socket) => {
       console.error("Error saving private message:", error);
     }
   });
-
   socket.on("allUsers", async () => {
     try {
       const users = await User.find().select("-password");
@@ -261,32 +227,189 @@ io.on("connection", (socket) => {
       socket.emit("error", "Unable to fetch users");
     }
   });
-
-  socket.on("ClearChat", async (idUser, idReciver) => {
+  // =================================================
+  socket.on("clearAll", async () => {
+    console.log("clearAll");
     try {
-      const user = await User.findById(idUser).select("-password");
-      const reciver = await User.findById(idReciver).select("-password");
-      user.correspondence = [];
-      reciver.correspondence = [];
-      await user.save();
-      await reciver.save();
-      io.emit("UserData", user);
-      io.emit("UserData", reciver);
+      const users = await User.find().select("-password");
+      for (const user of users) {
+        user.correspondence = [];
+        await user.save();
+      }
     } catch (error) {
       console.error("Error fetching users:", error);
       socket.emit("error", "Unable to fetch users");
     }
   });
+  // =================================================
+  socket.on("ClearChat", async (idUser, idReciver) => {
+    // console.log("idUser", idUser, ",idReciver", idReciver);
+    try {
+      const user = await User.findById(idUser).select("-password");
+      const reciver = await User.findById(idReciver).select("-password");
+      let userCorr = user.correspondence;
+      let reciverCorr = reciver.correspondence;
 
+      userCorr = userCorr.map((el) => {
+        const doc = el.toObject ? el.toObject() : el;
+        if (
+          doc.from.toString() === idReciver ||
+          doc.to.toString() === idReciver
+        ) {
+          return { ...doc, status: "archived" };
+        }
+        return doc;
+      });
+      reciverCorr = reciverCorr.map((el) => {
+        const doc = el.toObject ? el.toObject() : el;
+        if (doc.from.toString() === idUser || doc.to.toString() === idUser) {
+          return { ...doc, status: "archived" };
+        }
+        return doc;
+      });
+      user.correspondence = userCorr;
+      reciver.correspondence = reciverCorr;
+      await user.save();
+      await reciver.save();
+      // -------------------
+      let inUser = userSocketMap.filter((el) => el.user === idUser);
+      let inReciver = userSocketMap.filter((el) => el.user === idReciver);
+
+      inUser.forEach((el) => {
+        io.to(el.socket).emit("UserData", user);
+        console.log(`сообщение отправлено в сокет ${el.socket}`);
+      });
+      inReciver.forEach((el) => {
+        io.to(el.socket).emit("UserData", reciver);
+        console.log(`сообщение отправлено в сокет ${el.socket}`);
+      });
+      // -------------------
+      // io.to().emit("UserData", user);
+      // io.to().emit("UserData", reciver);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      socket.emit("error", "Unable to fetch users");
+    }
+  });
+  // =================================================
+  socket.on("userConnected", (user, socketId) => {
+    userSocketMap.push({
+      userName: user.name,
+      user: user.id,
+      socket: socketId,
+    });
+
+    let map = new Map();
+    userSocketMap.forEach((item) => {
+      map.set(item.user + item.socket, item);
+    });
+
+    userSocketMap = Array.from(map.values());
+    userSocketMap.filter((el) => el.socket !== socket.id);
+    userIndex = onlineUsers.findIndex((el) => el.user.id === user.id);
+    currentUser = onlineUsers[userIndex];
+    connectionId = socket.id;
+    if (userIndex == -1) {
+      onlineUsers.push({ user: user, count: 1 });
+    }
+    console.log("userIndex", userIndex);
+    console.log("currentUser", currentUser);
+    console.log("connectionId", connectionId);
+    console.log("socket.id", socket.id);
+    if (userIndex == 0 && currentUser && connectionId == socket.id) {
+      currentUser.count += 1;
+    }
+    // console.log("*****on userConnected****", user.id, socketId);
+    // console.log(
+    //   `User connected -name: ${user.name} - connectionId: ${connectionId} -socket.id: ${socket.id}`
+    // );
+    // console.log("Current user:", currentUser);
+    console.log("*********");
+    console.log(
+      "**Online users:**",
+      onlineUsers.map((el) => ({ name: el.user?.name, count: el?.count }))
+    );
+    console.log("**userSocketMap**", userSocketMap);
+    console.log("====================");
+
+    io.emit("onlineUsers", onlineUsers);
+  });
+  // =================================================
+  socket.on("userRefresh", (user, socketId) => {
+    console.log("**** on  userRefresh:****", user.name, socket.id);
+    userSocketMap.push({
+      userName: user.name,
+      user: user.id,
+      socket: socketId,
+    });
+    let userIndex = onlineUsers.findIndex((el) => el.user.id === user.id);
+    if (userIndex == -1) {
+      onlineUsers.push({ user: user, count: 1 });
+    } else {
+      onlineUsers[userIndex].count += 1;
+    }
+    io.emit("onlineUsers", onlineUsers);
+    console.log("**Online users userRefresh:**", onlineUsers);
+    console.log("**userSocketMap on  userRefresh**", userSocketMap);
+  });
+  // =================================================
+  socket.on("disconnectUser", (user) => {
+    console.log(
+      "************",
+      "**** on  disconnectUser:****",
+      user.name,
+      socket.id,
+      userSocketMap
+    );
+
+    userSocketMap = userSocketMap.filter((item) => item.socket !== socket.id);
+
+    const current = onlineUsers.find((el) => el.user.id === user.id);
+    if (current && current.count > 0) {
+      current.count -= 1;
+    }
+    if (current && current.count === 0) {
+      onlineUsers = onlineUsers.filter((el) => el.user.id !== current.user.id);
+      for (let userId in userSocketMap) {
+        if (userSocketMap[userId] === socket.id) {
+          delete userSocketMap[userId];
+          break;
+        }
+      }
+    }
+    console.log(
+      "**Online users:**",
+      onlineUsers.map((el) => {
+        el.user?.name, el?.count;
+      })
+    );
+    console.log("***userSocketMap after disconnectUser ***", userSocketMap);
+    io.emit("onlineUsers", onlineUsers);
+  });
+  // =================================================
   socket.on("disconnect", () => {
-    // onlineUsers = onlineUsers.filter((el) => el.count !== 0);
-    // for (let userId in userSocketMap) {
-    //   if (userSocketMap[userId] === socket.id) {
-    //     delete userSocketMap[userId];
-    //     break;
-    //   }
-    // }
-    // console.log("userSocketMap", userSocketMap);
+    const userInMap = userSocketMap.find((el) => el.socket == socket.id);
+    let current;
+    if (userInMap) {
+      current = onlineUsers.find((el) => el.user.id === userInMap.user);
+    }
+
+    if (current) {
+      current.count -= 1;
+      if (current.count === 0) {
+        onlineUsers = onlineUsers.filter(
+          (el) => el.user.id !== current.user.id
+        );
+      }
+    }
+    userSocketMap = userSocketMap.filter((el) => el.socket !== socket.id);
+    console.log(`*************`);
+    console.log(`*on  disconnect: socket.id,- ${socket.id} interrapted:** `);
+    console.log(
+      "**on  disconnect: Online users:**",
+      onlineUsers.map((el) => ({ name: el.user?.name, count: el?.count }))
+    );
+    console.log("**on  disconnect: userSocketMap**", userSocketMap);
     io.emit("onlineUsers", onlineUsers);
   });
 });

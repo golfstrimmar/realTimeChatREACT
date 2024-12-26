@@ -53,6 +53,7 @@ const Login = () => {
         localStorage.setItem("user", JSON.stringify(user));
         dispatch(setUser(user, token));
         setSuccessMessage("Login successful");
+        console.log("***socket emit userConnected***", user);
         socket.emit("userConnected", user, socket.id);
         socket.on("onlineUsers", (users) => {
           dispatch(setOnlineUsers(users));

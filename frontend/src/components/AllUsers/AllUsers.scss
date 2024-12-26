@@ -3,6 +3,7 @@
 .allUsers {
   .userInfo-item {
     background-color: $green;
+    cursor: pointer;
   }
 
   &-list {
@@ -10,5 +11,22 @@
     gap: 10px;
     // &- {}
     // &- {}
+  }
+}
+
+.userInfo-item {
+  background-color: $blue;
+  padding: 5px 15px;
+  border-radius: 50%;
+  color: white;
+  box-shadow: 1px 5px 10px -5px #000000;
+  border-radius: 10px;
+  border-left: 2px solid #939393;
+  border-right: 2px solid #939393;
+  padding: 0.3rem;
+  transition: background .3s, box-shadow .3s, color .3s, transform 0.2s;
+
+  &:hover {
+    box-shadow: 1px 4px 7px -5px #5f5f5f;
   }
 }

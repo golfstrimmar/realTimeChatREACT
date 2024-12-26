@@ -19,17 +19,6 @@ const Privat = ({ open, privat, persona, setDataMessage }) => {
     setInfo(privat);
   }, [open, privat]);
 
-  // useEffect(() => {
-  //   console.log("resiver:", resiver);
-  // }, [resiver]);
-
-  // useEffect(() => {
-  //   console.log("privat:", privat);
-  // }, [privat]);
-  // useEffect(() => {
-  //   console.log("resiver:", resiver);
-  // }, [resiver, user]);
-
   useEffect(() => {
     if (privatMessage) {
       setOpenModalNotification(true);
@@ -45,17 +34,6 @@ const Privat = ({ open, privat, persona, setDataMessage }) => {
   }, [errorMessage]);
   // =============================
 
-  // const handleOpenModal = (user) => {
-  //   if (user) {
-  //     setOpen(true);
-  //     setAddressee(user);
-  //   }
-  // };
-
-  // const handleCloseModal = () => {
-  //   setOpen(false);
-  //   setAddressee(null);
-  // };
   // =============================
   const handleCloseModalNotification = () => {
     setOpenModalNotification(false);
@@ -65,6 +43,10 @@ const Privat = ({ open, privat, persona, setDataMessage }) => {
   // =============================
   const clearChat = () => {
     socket.emit("ClearChat", user.id, persona._id);
+  };
+  // =============================
+  const clearAll = () => {
+    socket.emit("clearAll");
   };
   // =============================
   const handleInputChange = (event) => {
@@ -78,11 +60,6 @@ const Privat = ({ open, privat, persona, setDataMessage }) => {
     }
 
     setDataMessage({ text: privatText, from: user, to: persona });
-    // console.log("privat message to send:", data);
-    // socket.emit("sendPrivatMessage", data);
-    // socket.on("UserData", (user) => {
-    //   setInfo(user.correspondence);
-    // });
     setPrivatText("");
   };
   // =============================
@@ -109,87 +86,27 @@ const Privat = ({ open, privat, persona, setDataMessage }) => {
         {user &&
           info &&
           info.length > 0 &&
-          info.map((item, index) => (
-            <Card
-              key={index}
-              className={`privat-item ${item.status === "sent" ? " _is-sent" : "_is-received"}`}
-            >
-              <Typography variant="span">
-                From: {item.from.name} to {item.to.name}
-              </Typography>
-              <Typography variant="span"> Status: {item.status}</Typography>
-              <Typography variant="h6" className=" privat-text">
-                {item.text}
-              </Typography>
-              <Typography variant="span">
-                {new Date(item.timestamp).toLocaleString()}
-              </Typography>
-            </Card>
-          ))}
-        {/* <div className="privat-content">
-          <Typography variant="h6" className="privat-title">
-            Sent to
-            <Typography
-              variant="span"
-              style={{ fontWeight: "bold", marginLeft: "5px", color: "blue" }}
-            >
-              {resiver.name}
-            </Typography>
-          </Typography>
-          <div className="privat-list">
-            {privat && privat.length > 0 ? (
-              privat
-                .filter((item) => item.status === "sent")
-                .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
-                .map((item, index) => (
-                  <Card key={index} className="privat-item">
-                    <Typography variant="span">To: {item.to.name}</Typography>
-                    <Typography variant="h6" className=" privat-text">
-                      {item.text}
-                    </Typography>
-                    <Typography variant="span">
-                      {new Date(item.timestamp).toLocaleString()}
-                    </Typography>
-                  </Card>
-                ))
-            ) : (
-              <div>No private information available.</div>
-            )}
-          </div>
-        </div>
-        <div className="privat-content">
-          <Typography variant="h6" className="privat-title">
-            Received from
-            <Typography
-              variant="span"
-              style={{ fontWeight: "bold", marginLeft: "5px", color: "blue" }}
-            >
-              {resiver.name}
-            </Typography>
-          </Typography>
-          <div className="privat-list">
-            {privat && privat.length > 0 ? (
-              privat
-                .filter((item) => item.status === "received")
-                .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
-                .map((item, index) => (
-                  <Card key={index} className="privat-item">
-                    <Typography variant="span">
-                      Received from : {item.from.name}
-                    </Typography>
-                    <Typography variant="h6" className=" privat-text">
-                      {item.text}
-                    </Typography>
-                    <Typography variant="span">
-                      {new Date(item.timestamp).toLocaleString()}
-                    </Typography>
-                  </Card>
-                ))
-            ) : (
-              <div>No private information available.</div>
-            )}
-          </div>
-        </div> */}
+          info.map((item, index) => {
+            if (item.status !== "archived") {
+              return (
+                <Card
+                  key={index}
+                  className={`privat-item ${item.status === "sent" ? " _is-sent" : "_is-received"}`}
+                >
+                  <Typography variant="span">
+                    From: {item.from.name} to {item.to.name}
+                  </Typography>
+                  <Typography variant="span"> Status: {item.status}</Typography>
+                  <Typography variant="h6" className=" privat-text">
+                    {item.text}
+                  </Typography>
+                  <Typography variant="span">
+                    {new Date(item.timestamp).toLocaleString()}
+                  </Typography>
+                </Card>
+              );
+            }
+          })}
       </div>
 
       <Box className="privat-form">
@@ -232,17 +149,30 @@ const Privat = ({ open, privat, persona, setDataMessage }) => {
         handleCloseModalNotification={handleCloseModalNotification}
         message={privatMessage}
       />
-
-      <Button
-        variant="contained"
-        color="error"
-        style={{ marginTop: "10px" }}
-        onClick={() => {
-          clearChat();
-        }}
-      >
-        Clear chat
-      </Button>
+      <div className="buttons">
+        <Button
+          variant="contained"
+          color="error"
+          style={{ marginTop: "10px" }}
+          onClick={() => {
+            clearChat();
+          }}
+          className="X-button clear-button"
+        >
+          Clear chat
+        </Button>
+        <Button
+          variant="contained"
+          color="error"
+          style={{ marginTop: "10px",display:"none" }}
+          onClick={() => {
+            clearAll();
+          }}
+          className="X-button"
+        >
+          X
+        </Button>
+      </div>
     </>
   );
 };

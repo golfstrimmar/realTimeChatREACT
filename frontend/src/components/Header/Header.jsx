@@ -84,7 +84,7 @@ const Header = () => {
 
   //======================================
   const handleLogout = () => {
-    console.log("logout", user);
+    console.log("**socket disconnectUser***", user);
     socket.emit("disconnectUser", user);
     localStorage.removeItem("user");
     dispatch(setUser(null, null));

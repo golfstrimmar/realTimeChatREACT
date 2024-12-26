@@ -13,29 +13,15 @@ const serverUrl = process.env.REACT_APP_API_URL;
 function App() {
   const dispatch = useDispatch();
   const user = useSelector((state) => state.auth.user);
-  // const socket = useSelector((state) => state.socket.socket);
+  let socket;
+  const [isDisconnecting, setIsDisconnecting] = useState(false);
 
   // ------------------------
-  // const socket = useSelector((state) => state.socket.socket);
 
-  // Обработчик события beforeunload
-  // const handleBeforeUnload = (event) => {
-  //   if (socket) {
-  //     socket.emit("disconnectUser");
-  //     localStorage.clear();
-  //     dispatch(setUser(null, null));
-  //     dispatch(setSocket(null));
-  //   }
-  // };
-  // window.addEventListener("beforeunload", handleBeforeUnload);
-  // ------------------------
-
-  // socket.emit("userConnected", user.id, socket.id);
   // ------------------------
   useEffect(() => {
-    // dispatch(setSocket(null));
     dispatch(restoreAuth());
-    let socket = window.socketInstance;
+    socket = window.socketInstance;
 
     if (!window.socketInstance) {
       socket = io(serverUrl, {
@@ -49,9 +35,22 @@ function App() {
     }
 
     window.socketInstance.on("connect", () => {
-      console.log("Socket connected with id:", window.socketInstance.id);
+      const authData = JSON.parse(localStorage.getItem("auth"));
+      let userData = null;
+
+      if (authData && authData.user) {
+        userData = authData.user;
+      }
+      if (userData) {
+        window.socketInstance.emit(
+          "userRefresh",
+          userData,
+          window.socketInstance.id
+        );
+      }
       dispatch(setSocket(window.socketInstance));
       window.socketInstance.emit("allUsers");
+
       window.socketInstance.on("Users", (users) => {
         dispatch(setAllUsers(users));
       });
@@ -59,13 +58,6 @@ function App() {
       window.socketInstance.on("onlineUsers", (users) => {
         dispatch(setOnlineUsers(users));
       });
-      if (user) {
-        window.socketInstance.emit(
-          "userConnected",
-          user,
-          window.socketInstance.id
-        );
-      }
     });
 
     return () => {
@@ -75,7 +67,7 @@ function App() {
         dispatch(setSocket(null));
       }
     };
-  }, [dispatch]);
+  }, [dispatch, socket, isDisconnecting]);
 
   return (
     <Router>

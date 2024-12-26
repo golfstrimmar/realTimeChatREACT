@@ -36,7 +36,11 @@ const userSchema = new mongoose.Schema({
       text: String,
       from: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, // Ссылка на отправителя
       to: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, // Ссылка на получателя
-      status: { type: String, enum: ["sent", "received"], required: true }, // Статус сообщения
+      status: {
+        type: String,
+        enum: ["sent", "received", "delete", "archived"],
+        required: true,
+      }, // Статус сообщения
       timestamp: { type: Date, default: Date.now }, // Время отправки
     },
   ],
