@@ -18,11 +18,13 @@ const OnlineUsers = () => {
         {errorMessage}
       </Typography> */}
       <div className="OnlineUsers">
-        <Typography variant="h5">Online Users:</Typography>
+        <Typography variant="p" className="allUsers-title">
+          Online Users:
+        </Typography>
         <ul className="userInfo">
           {onlineUsers.length > 0 &&
             onlineUsers.map((foo, index) => (
-              <li key={index} className="userInfo-item">
+              <li key={index} className="_btn userInfo-item">
                 {foo.user.name}({foo.count})
               </li>
             ))}

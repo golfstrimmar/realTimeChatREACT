@@ -11,18 +11,21 @@ import {
   CardMedia,
   Divider,
   Modal,
+  Box,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import CommentIcon from "@mui/icons-material/Comment";
 import "./Message.scss";
 import ModalComponent from "../Modal/Modal";
 import { useSelector, useDispatch } from "react-redux";
+import EditIcon from "@mui/icons-material/Edit";
 // ==============
 const Message = ({
   message,
   onLike,
   onAddComment,
   onDeleteComment,
+  onEditMessage,
   onDeleteMessage,
 }) => {
   // ---------------------
@@ -42,7 +45,7 @@ const Message = ({
     if (!user) {
       setAuthor(false);
     }
-  }, [user]);
+  }, [user, message]);
   // // ---------------------
 
   const handleCommentChange = (e) => {
@@ -73,6 +76,10 @@ const Message = ({
   const handleDeleteComment = (commentId) => {
     onDeleteComment(message._id, commentId);
   };
+  const handleEditMessage = () => {
+    console.log("edit message:", message);
+    onEditMessage(message._id);
+  };
   const handleDeliteMessage = () => {
     onDeleteMessage(message._id);
   };
@@ -87,10 +94,31 @@ const Message = ({
     <>
       <Card className="message-card" style={{ width: "100%" }}>
         <CardContent className="message-card-content">
-          {/* Message timestamp */}
-          <Typography variant="caption" color="textSecondary" gutterBottom>
-            {message.createdAt}
-          </Typography>
+          {/* Message author */}
+          <Box
+            sx={{ display: "flex", alignItems: "center", mb: 1 }}
+            className="MessageInfo"
+          >
+            {message.name && (
+              <Typography
+                variant="caption"
+                color="textSecondary"
+                gutterBottom
+                className="message-author"
+              >
+                {message.name}
+              </Typography>
+            )}
+            {/* Message timestamp */}
+            <Typography
+              variant="caption"
+              color="textSecondary"
+              gutterBottom
+              className="message-timestamp"
+            >
+              {message.createdAt}
+            </Typography>
+          </Box>
           {/* Message file (Image or Video) */}
           {message.file && (
             <div className="message-file-container">
@@ -142,12 +170,19 @@ const Message = ({
               color="primary"
             />
             {author && (
+              <EditIcon
+                className="edit-icon deliteCard"
+                onClick={handleEditMessage}
+              />
+            )}
+            {author && (
               <DeleteIcon
                 color="error"
                 className="delete-icon deliteCard"
                 onClick={handleDeliteMessage}
               />
             )}
+
             <Typography variant="h5" color="error" style={{ marginTop: "8px" }}>
               {ErrorMessage}
             </Typography>

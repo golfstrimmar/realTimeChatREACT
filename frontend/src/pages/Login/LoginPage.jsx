@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { setUser } from "../../redux/actions/authActions";
 import "./Login.scss";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
@@ -7,6 +6,7 @@ import { TextField, Button, Typography, Container, Box } from "@mui/material";
 import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
 import { useSelector, useDispatch } from "react-redux";
 import { setOnlineUsers } from "../../redux/actions/onlineUsersActions";
+import { setUser } from "../../redux/actions/authActions";
 // ======================
 const Login = () => {
   const dispatch = useDispatch();

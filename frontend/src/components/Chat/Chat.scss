@@ -10,31 +10,75 @@
 }
 
 .fileInput {
-  margin: 10px 0;
+  margin: 20px 0 !important;
+  background-color: whitesmoke !important;
+  border-radius: 10px;
+}
+
+.messageInput {
+  background-color: whitesmoke !important;
+  border-radius: 10px;
+
+  .MuiInputBase-root {
+    border-radius: 10px;
+  }
 }
 
 .message-exect {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  position: absolute;
+  top: -20px;
+  left: 0;
+  font-size: 15px;
 }
 
+.chat {
+  position: fixed;
+  bottom: 0;
+  z-index: 200px;
+  width: 100%;
+  left: 0;
+  background-color: $l-light !important;
+}
+
+.cl {
+  position: relative;
+}
 
 .sendButton {
   background-color: $blue !important;
-  padding: 5px 15px;
-  border-radius: 50%;
   color: white !important;
-  box-shadow: 1px 5px 15px -5px #000000;
-  border-radius: 10px;
+  box-shadow: 1px 5px 20px -5px #000000;
+
   border-left: 2px solid #939393;
   border-right: 2px solid #939393;
-  padding: 0.3rem;
   transition: background 1.5s, box-shadow 1.8s, color 1.8s, transform 0.5s;
-  max-width: 200px;
+  position: absolute !important;
+  top: 50%;
+  left: auto;
+  transform: translateY(-50%);
+  right: 20px;
+  width: fit-content;
+  border-radius: 100% !important;
+  padding: 30px !important;
+  min-width: 4px;
+  width: 40px !important;
+  height: 40px !important;
+
+  span {
+    margin: 0 0 0 0;
+
+  }
+
+  svg {
+    width: 20px !important;
+    height: 20px !important;
+  }
 
   &:hover {
-    box-shadow: 1px 5px 25px -5px #000000;
+    box-shadow: 1px 5px 15px -5px #000000;
   }
 }
 

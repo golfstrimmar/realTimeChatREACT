@@ -5,47 +5,172 @@
     display: grid;
     grid-template-columns: 200px 1fr;
     min-height: 100vh;
+    position: relative;
+
+
+    .imgs {
+      filter: blur(6px);
+    }
   }
 
   &-menu {
     background-color: whitesmoke;
     padding: 90px 0px 0 0px;
-    z-index: 2;
+    z-index: 20;
+    overflow: hidden;
+    position: relative;
+    display: grid;
+    grid-template-rows: repeat(auto-fill, 80px);
 
     &-item {
       padding: 5px 10px;
       display: flex;
       flex-direction: column;
       cursor: pointer;
-      transition: all 0.2s;
+      position: relative;
+      background-color: whitesmoke;
+      transition: all .2s ease;
+      color: $deep-gray;
+
+      &::after {
+        content: '';
+        position: absolute;
+        // background-color: $deep-blue;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        transition: all .1s ease;
+      }
+
+      .decors {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: transparent;
+        transform: translateX(25%) scale(0.65);
+        transition: all .1s ease;
+        z-index: -1;
+      }
 
       &._is-active {
-        background-color: $green;
+        background-color: $l-light;
+        z-index: 20;
+        color: $b;
+
+        &::after {
+          opacity: 1;
+        }
+
+        .decors {
+          opacity: 1;
+          transform: translateX(0) scale(1);
+        }
       }
 
       &-name {
+        z-index: 20;
         font-weight: 700 !important;
+        display: flex;
+        align-items: center;
+        gap: 10px;
       }
 
       &-email,
       &-role {
+        z-index: 20;
         font-weight: 300 !important;
       }
     }
   }
 
-  &-plaza {
-    background-color: $green;
-    padding: 90px 10px 0;
+  .decor {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
 
-    display: flex;
-    flex-direction: column;
+    &::after {
+      content: '';
+      position: absolute;
+      // background-color: $deep-blue;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      z-index: -3; // Понижаем слой для after
+    }
+
+    &::before {
+      content: '';
+      position: absolute;
+      // background-color: whitesmoke;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      z-index: -2; // Понижаем слой для before
+    }
+
+    &-top {
+      &::after {
+        top: 0;
+        right: 0;
+        transform: translate(50%, -50%);
+      }
+
+      &::before {
+        top: 0;
+        right: 0;
+        transform: translate(0%, -100%);
+      }
+    }
+
+    &-low {
+      &::after {
+        bottom: 0;
+        right: 0;
+        transform: translate(50%, 50%);
+      }
+
+      &::before {
+        bottom: 0;
+        right: 0;
+        transform: translate(0%, 100%);
+      }
+    }
   }
+}
+
+.personal-menu-item-status {
+  font-size: 14px;
+  font-weight: 300;
+  color: white;
+  max-height: 22px;
+  box-shadow: 1px 4px 13px -6px #000000;
+  border-radius: 10px;
+  border-top: 2px solid #939393;
+  border-left: 2px solid #939393;
+  border-right: 2px solid #939393;
+  display: grid;
+  place-items: center;
+  padding: 0 3px;
+  background-color: $l;
+}
+
+.personal-plaza {
+  padding: 90px 10px 0;
+  display: flex;
+  flex-direction: column;
+  z-index: 2;
 }
 
 .Privat {
   transform: translateX(-200vw);
-  transition: all .2s;
+  transition: all 0.2s;
 
   &._is-open {
     transform: translateX(0);

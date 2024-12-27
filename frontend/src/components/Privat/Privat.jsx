@@ -69,20 +69,7 @@ const Privat = ({ open, privat, persona, setDataMessage }) => {
         {user && privat && privat.length === 0 && (
           <Typography variant="h6">Your correspondence is empty.</Typography>
         )}
-        {user && (
-          <div style={{ marginBottom: "20px" }}>
-            <Typography variant="h6">
-              The user is ready to communicate:
-              <Typography
-                variant="span"
-                color="blue"
-                style={{ margin: "8px 5px 0 5px" }}
-              >
-                {persona?.name}
-              </Typography>
-            </Typography>
-          </div>
-        )}
+
         {user &&
           info &&
           info.length > 0 &&
@@ -118,9 +105,14 @@ const Privat = ({ open, privat, persona, setDataMessage }) => {
             width: "100%",
           }}
         />
-        <Typography variant="h6">
-          Sent message to{" "}
-          <Typography variant="span" color="blue">
+        <Typography variant="p">
+          Send a message to
+          <Typography
+            variant="span"
+            color="blue"
+            style={{ marginLeft: "5px" }}
+            className="persona-name"
+          >
             {persona?.name}
           </Typography>
         </Typography>
@@ -131,6 +123,7 @@ const Privat = ({ open, privat, persona, setDataMessage }) => {
           size="small"
           value={privatText}
           onChange={handleInputChange}
+          className="privat-input"
         />
         <Typography variant="h5" color="error">
           {errorMessage}
@@ -139,7 +132,7 @@ const Privat = ({ open, privat, persona, setDataMessage }) => {
           variant="contained"
           color="primary"
           onClick={handleAddPrivatMessage}
-          className="privat-button"
+          className="privat-button _btn"
         >
           Add Privat Message
         </Button>
@@ -157,18 +150,18 @@ const Privat = ({ open, privat, persona, setDataMessage }) => {
           onClick={() => {
             clearChat();
           }}
-          className="X-button clear-button"
+          className="X-button clear-button _btn"
         >
           Clear chat
         </Button>
         <Button
           variant="contained"
           color="error"
-          style={{ marginTop: "10px",display:"none" }}
+          style={{ marginTop: "10px", display: "none" }}
           onClick={() => {
             clearAll();
           }}
-          className="X-button"
+          className="X-button _btn"
         >
           X
         </Button>
@@ -178,3 +171,20 @@ const Privat = ({ open, privat, persona, setDataMessage }) => {
 };
 
 export default Privat;
+
+// {
+//   user && (
+//     <div style={{ marginBottom: "20px" }}>
+//       <Typography variant="h6">
+//         {/* The user is ready to communicate: */}
+//         <Typography
+//           variant="span"
+//           color="blue"
+//           style={{ margin: "8px 5px 0 5px" }}
+//         >
+//           {persona?.name}
+//         </Typography>
+//       </Typography>
+//     </div>
+//   );
+// }

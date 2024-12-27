@@ -4,3 +4,9 @@ export const setAllUsers = (users) => {
     payload: users,
   };
 };
+export const setGoPrivat = (user) => {
+  return {
+    type: "SET_GO_PRIVAT",
+    payload: user,
+  };
+};

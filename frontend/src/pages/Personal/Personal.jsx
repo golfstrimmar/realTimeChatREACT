@@ -1,31 +1,32 @@
 import React, { useState, useEffect } from "react";
 import "./Personal.scss";
-import { useSelector } from "react-redux";
 import { Typography } from "@mui/material";
 import Privat from "../../components/Privat/Privat";
 import Loading from "../../components/Loading/Loading";
+import { useSelector, useDispatch } from "react-redux";
+import { setGoPrivat } from "../../redux/actions/AllUsersActions";
+import chatBg from "../../assets/img/chat.jpg";
 const Personal = () => {
   const user = useSelector((state) => state.auth.user);
   const allUsers = useSelector((state) => state.allUsers.allUsers);
   const socket = useSelector((state) => state.socket.socket);
+  const goPrivat = useSelector((state) => state.allUsers.goPrivat);
   const [activeTab, setActiveTab] = useState(null);
   const [open, setOpen] = useState(false);
   const [privat, setPrivat] = useState("");
   const [persona, setPersona] = useState(null);
   const [dataMessage, setDataMessage] = useState(null);
-  const [goPrivat, setGoPrivat] = useState(null);
+  const dispatch = useDispatch();
   // =============================
 
   useEffect(() => {
-    console.log("allUsers", allUsers);
-    const data = localStorage.getItem("GoPrivat");
-    if (data) {
-      console.log("data:", data);
-      setPersona(data);
-      handleOpenTab(data);
-      setActiveTab(data);
+    if (goPrivat) {
       setOpen(true);
+      setPersona(goPrivat);
+      handleOpenTab(goPrivat);
+      setActiveTab(goPrivat);
     }
+    dispatch(setGoPrivat(null));
   }, []);
   // =============================
 
@@ -41,7 +42,7 @@ const Personal = () => {
       socket.emit("User", user?.id);
       socket.off("UserData");
       socket.on("UserData", (data) => {
-        const temp = data.correspondence;
+        const temp = data?.correspondence;
         if (temp) {
           const correspondence = temp.filter((message) => {
             const toId = message.to ? message.to._id : null;
@@ -84,9 +85,9 @@ const Personal = () => {
     }
   }, [dataMessage]);
   // ==========================
-  useEffect(() => {
-    console.log("activeTab", activeTab);
-  }, [activeTab]);
+  // useEffect(() => {
+  //   console.log("activeTab", activeTab);
+  // }, [activeTab]);
   // ===================================
   if (!user) {
     return <Loading />;
@@ -95,6 +96,9 @@ const Personal = () => {
   return (
     <section className="personal ">
       <div className="personal-body">
+        <div className="imgs">
+          <img src={chatBg} alt="" />
+        </div>
         <div className="personal-menu">
           {socket &&
             allUsers &&
@@ -108,6 +112,12 @@ const Personal = () => {
                 >
                   <Typography variant="h6" className="personal-menu-item-name">
                     {item.name}
+                    <Typography
+                      variant="span"
+                      className="personal-menu-item-status"
+                    >
+                      online
+                    </Typography>
                   </Typography>
                   <Typography variant="p" className="personal-menu-item-email">
                     {item.email}
@@ -115,6 +125,10 @@ const Personal = () => {
                   <Typography variant="p" className="personal-menu-item-role">
                     {item.role}
                   </Typography>
+                  <div className="decors">
+                    <div className="decor decor-top"></div>
+                    <div className="decor decor-low"></div>
+                  </div>
                 </li>
               ))}
         </div>

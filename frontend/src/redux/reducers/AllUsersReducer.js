@@ -1,5 +1,6 @@
 const initialState = {
   allUsers: [],
+  goPrivat: null,
 };
 
 const AllUsersReducer = (state = initialState, action) => {
@@ -8,6 +9,11 @@ const AllUsersReducer = (state = initialState, action) => {
       return {
         ...state,
         allUsers: action.payload,
+      };
+    case "SET_GO_PRIVAT":
+      return {
+        ...state,
+        goPrivat: action.payload,
       };
     default:
       return state;

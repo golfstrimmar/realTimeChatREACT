@@ -17,62 +17,60 @@ import "./Chat.scss";
 import OnlineUsers from "../OnlineUsers/OnlineUsers";
 import AllUsers from "../AllUsers/AllUsers";
 import Loading from "../Loading/Loading";
+import MessageList from "../MessageList/MessageList";
+
 // ==============================
 
 const Chat = () => {
   const [messages, setMessages] = useState([]);
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState(null);
   const user = useSelector((state) => state.auth.user);
   const [file, setFile] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
   const [fileURL, setFileURL] = useState(null);
   const [loading, setLoading] = useState(false);
   const socket = useSelector((state) => state.socket.socket);
-
+  const [messageIdToEdit, setMessageIdToEdit] = useState(null);
   // =======================
   useEffect(() => {
-    // Загружаем сообщения с сервера
     axios
       .get(`${process.env.REACT_APP_API_URL}/messages`)
       .then((response) => {
-        setMessages(response.data); // Получаем и отображаем все сообщения
+        setMessages(response.data);
       })
       .catch((error) => {
         console.error("Error loading messages:", error);
       });
 
-    // Обработка входящих сообщений от сервера
     if (socket) {
-      socket.on("receiveMessage", (msg) => {
-        setMessages((prevMessages) => [...prevMessages, msg]); // Добавляем новое сообщение в список
-      });
-
-      socket.on("updateMessage", (updatedMessage) => {
-        setMessages((prevMessages) =>
-          prevMessages.map((msg) =>
-            msg._id === updatedMessage._id ? updatedMessage : msg
-          )
-        ); // Обновляем существующее сообщение
-      });
-
       socket.on("deleteMessage", (id) => {
         setMessages((prevMessages) =>
           prevMessages.filter((message) => message._id !== id)
-        ); // Удаляем сообщение
+        );
       });
     }
 
     return () => {
       if (socket) {
-        socket.off("receiveMessage");
-        socket.off("updateMessage");
+        // socket.off("receiveMessage");
+        // socket.off("updateMessage");
         socket.off("deleteMessage");
       }
     };
   }, [user, socket]);
 
   //========================================
-
+  useEffect(() => {
+    if (errorMessage) {
+      setTimeout(() => {
+        setErrorMessage("");
+      }, 2000);
+    }
+  }, [errorMessage]);
+  //========================================
+  useEffect(() => {
+    console.log("++_+___+++++messages channge", messages);
+  }, [messages]);
   //========================================
   const sendMessage = async () => {
     if (!user) {
@@ -82,16 +80,18 @@ const Chat = () => {
       }, 2000);
       return;
     }
-    setLoading(true);
+
     if (!message.trim()) {
       setErrorMessage("The text is required.");
       return;
     }
     if (message.trim() || file) {
       setErrorMessage("");
+      setLoading(true);
       const messageData = {
         text: message,
         author: user.id,
+        name: user.name,
       };
       if (file) {
         const maxFileSize = 100 * 1024 * 1024; // 100 MB
@@ -127,11 +127,30 @@ const Chat = () => {
           return;
         }
       }
-      socket.emit("sendMessage", messageData);
+
+      if (messageIdToEdit) {
+        socket.emit("updateMessage", {
+          ...messageData,
+          _id: messageIdToEdit,
+        });
+        socket.on("receiveMessage", (updatedMessage) => {
+          setMessages((prevMessages) =>
+            prevMessages.map((msg) =>
+              msg._id === updatedMessage._id ? updatedMessage : msg
+            )
+          );
+        });
+      } else {
+        socket.emit("sendMessage", messageData);
+        socket.on("receiveMessage", (msg) => {
+          setMessages((prevMessages) => [...prevMessages, msg]);
+        });
+      }
+      setErrorMessage("");
+      setLoading(false);
       setMessage("");
       setFile(null);
       setFileURL(null);
-      setLoading(false);
     }
   };
   // ===================================
@@ -151,6 +170,19 @@ const Chat = () => {
   const handleDeleteComment = (id, commentId) => {
     console.log("delete comment:", id, commentId);
     socket.emit("deleteComment", id, commentId);
+  };
+  // ===================================
+  const handleEditMessage = (message) => {
+    if (message) {
+      // console.log("messages", messages);
+      let temp = messages.find((msg) => msg._id === message);
+      setMessageIdToEdit(temp._id);
+      setMessage(temp.text);
+      setFileURL(temp.file);
+      console.log("chat edit message:", message);
+      //   socket.emit("deleteMessage", message);
+    }
+    // setMessage("");
   };
   // ===================================
   const handleDeleteMessage = (message) => {
@@ -173,64 +205,160 @@ const Chat = () => {
       }
     };
   }, [file]);
+  // const renderFilePreview = () => {
+  //   if (fileURL) {
+  //     if (file.type.startsWith("image")) {
+  //       return (
+  //         <CardMedia
+  //           component="img"
+  //           image={fileURL}
+  //           alt="Uploaded File"
+  //           className="uploadedFile"
+  //         />
+  //       );
+  //     }
+  //     if (file.type.startsWith("video")) {
+  //       return (
+  //         <CardMedia
+  //           component="video"
+  //           src={fileURL}
+  //           controls
+  //           className="uploadedFile"
+  //         />
+  //       );
+  //     }
+  //     if (fileURL.startsWith("http")) {
+  //       if (fileURL.endsWith(".mp4") || fileURL.endsWith(".webm")) {
+  //         return (
+  //           <CardMedia
+  //             component="video"
+  //             src={fileURL}
+  //             controls
+  //             className="uploadedFile"
+  //           />
+  //         );
+  //       } else if (
+  //         fileURL.endsWith(".jpg") ||
+  //         fileURL.endsWith(".jpeg") ||
+  //         fileURL.endsWith(".png")
+  //       ) {
+  //         return (
+  //           <CardMedia
+  //             component="img"
+  //             image={fileURL}
+  //             alt="Uploaded File"
+  //             className="uploadedFile"
+  //           />
+  //         );
+  //       }
+  //     }
+  //   }
+  //   return null;
+  // };
   const renderFilePreview = () => {
-    if (fileURL) {
-      if (file.type.startsWith("image")) {
-        return (
-          <CardMedia
-            component="img"
-            image={fileURL}
-            alt="Uploaded File"
-            className="uploadedFile"
-          />
-        );
-      } else if (file.type.startsWith("video")) {
-        return (
-          <CardMedia
-            component="video"
-            src={fileURL}
-            controls
-            className="uploadedFile"
-          />
-        );
+    // Если есть файл по ссылке или локальный файл
+    const url = file ? URL.createObjectURL(file) : fileURL; // Если есть локальный файл, используем его, иначе используем URL
+
+    if (url) {
+      if (url.startsWith("http")) {
+        // Это ссылка на файл (например, на Cloudinary)
+        if (url.endsWith(".mp4") || url.endsWith(".webm")) {
+          return (
+            <CardMedia
+              component="video"
+              src={url}
+              controls
+              className="uploadedFile"
+            />
+          );
+        } else if (
+          url.endsWith(".jpg") ||
+          url.endsWith(".jpeg") ||
+          url.endsWith(".png")
+        ) {
+          return (
+            <CardMedia
+              component="img"
+              image={url}
+              alt="Uploaded File"
+              className="uploadedFile"
+            />
+          );
+        }
+      } else {
+        // Локальный файл (если файл выбран, но еще не отправлен)
+        if (file.type.startsWith("image")) {
+          return (
+            <CardMedia
+              component="img"
+              image={url}
+              alt="Uploaded File"
+              className="uploadedFile"
+            />
+          );
+        }
+        if (file.type.startsWith("video")) {
+          return (
+            <CardMedia
+              component="video"
+              src={url}
+              controls
+              className="uploadedFile"
+            />
+          );
+        }
       }
     }
+
     return null;
   };
 
   //  ============================
   return (
-    <div>
+    <div className="chat-container">
       <AllUsers />
       <OnlineUsers />
       {messages.length > 0 ? (
-        <List className="message-list">
-          {messages &&
-            messages.map((message, index) => (
-              <Message
-                key={index}
-                message={message}
-                onLike={handleLike}
-                onAddComment={handleAddComment}
-                onDeleteComment={handleDeleteComment}
-                onDeleteMessage={handleDeleteMessage}
-              />
-            ))}
-        </List>
+        <MessageList
+          messages={messages}
+          handleLike={handleLike}
+          handleAddComment={handleAddComment}
+          handleDeleteComment={handleDeleteComment}
+          handleEditMessage={handleEditMessage}
+          handleDeleteMessage={handleDeleteMessage}
+        />
       ) : (
         <Typography variant="h6">No messages yet</Typography>
       )}
-      <Paper style={{ padding: "16px", marginTop: "16px" }}>
-        <TextField
-          fullWidth
-          variant="outlined"
-          label="Type a message..."
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          multiline
-          rows={4}
-          size="small"
-        />
+      <Paper
+        style={{ padding: "26px 15px 15px 15px", marginTop: "16px" }}
+        className="chat"
+      >
+        <div className="cl">
+          <div className="message-exect">
+            <Typography variant="p" color="error">
+              {errorMessage}
+            </Typography>
+            {!errorMessage && loading && <Loading />}
+          </div>
+
+          <TextField
+            fullWidth
+            variant="outlined"
+            label="Type a message..."
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            multiline
+            rows={4}
+            size="small"
+            className="messageInput"
+          />
+          <Button
+            onClick={sendMessage}
+            endIcon={<SendIcon />}
+            className="sendButton"
+          />
+        </div>
         <IconButton component="label" className="fileInput">
           <AttachFileIcon />
           <input
@@ -240,21 +368,7 @@ const Chat = () => {
             accept="image/*,video/*"
           />
         </IconButton>
-        <div className="message-exect">
-          {renderFilePreview()}
-          <Typography variant="h5" color="error">
-            {errorMessage}
-          </Typography>
-          {!errorMessage && loading && <Loading />}
-          <Button
-            onClick={sendMessage}
-            fullWidth
-            endIcon={<SendIcon />}
-            className="sendButton"
-          >
-            Send
-          </Button>
-        </div>
+        {renderFilePreview()}
       </Paper>
     </div>
   );

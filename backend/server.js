@@ -91,12 +91,38 @@ io.on("connection", (socket) => {
         text: msg.text,
         author: msg.author,
         file: msg.file,
+        name: msg.name,
       });
       console.log("new message socket:", newMessage);
       await newMessage.save();
       io.emit("receiveMessage", newMessage);
     } catch (error) {
       console.error("Error sending message socket:", error);
+    }
+  });
+  socket.on("updateMessage", async (updatedMessageData) => {
+    try {
+      const updatedMessage = await Message.findByIdAndUpdate(
+        updatedMessageData._id,
+        {
+          text: updatedMessageData.text,
+          file: updatedMessageData.file,
+          author: updatedMessageData.author,
+          name: updatedMessageData.name,
+        },
+        { new: true } // Возвращаем обновленное сообщение
+      );
+
+      if (!updatedMessage) {
+        socket.emit("error", "Message not found.");
+        return;
+      }
+
+      console.log("**********Updated message:************", updatedMessage);
+      io.emit("receiveMessage", updatedMessage);
+    } catch (error) {
+      console.error("Error updating message:", error);
+      socket.emit("error", "Failed to update message.");
     }
   });
   socket.on("likeMessage", async (id, type) => {

@@ -5,10 +5,22 @@
   align-items: center;
   gap: 20px;
   margin: 20px 0;
+  position: relative;
+
+  .allUsers-title {
+    margin-right: 5px !important;
+  }
+
+  ._btn {
+    cursor: none !important;
+
+    &:hover {
+      box-shadow: 1px 5px 10px -5px #000000, inset 1px 3px 10px -5px white !important;
+    }
+  }
 }
 
 .userInfo {
   display: flex;
   gap: 5px;
 }
-

@@ -4,39 +4,67 @@ import { useSelector, useDispatch } from "react-redux";
 import EditIcon from "@mui/icons-material/Edit";
 import { Typography } from "@mui/material";
 import { useNavigate } from "react-router-dom";
+import { setGoPrivat } from "../../redux/actions/AllUsersActions";
+import BlockIcon from "@mui/icons-material/Block";
 // ============================
 const AllUsers = () => {
   const socket = useSelector((state) => state.socket.socket);
   const user = useSelector((state) => state.auth.user);
-  const [usersAll, setAllUsers] = useState([]);
+  const allUsers = useSelector((state) => state.allUsers.allUsers);
+  const [errorMessage, setErrorMessage] = useState("");
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   // ====================================
-  useEffect(() => {
-    if (socket) {
-      socket.emit("allUsers");
-      socket.on("Users", (users) => {
-        setAllUsers(users);
-      });
-    }
-  }, [socket]);
+  // useEffect(() => {
+  //   if (socket) {
+  //   }
+  // }, [socket]);
   // =========================
-  const handleGoPrivat = (user) => {
-    navigate(`/personal`);
-    localStorage.setItem("GoPrivat", JSON.stringify({ user }));
+  const handleGoPrivat = (Gouser) => {
+    if (user.id !== Gouser._id) {
+      navigate(`/personal`);
+      dispatch(setGoPrivat(Gouser));
+    }
   };
   // =========================
   return (
-    <div className="OnlineUsers allUsers">
-      <Typography variant="h5">All Users:</Typography>
+    <div className=" allUsers">
+      <Typography variant="p" className="allUsers-title">
+        All Users:
+      </Typography>
       <ul className="userInfo">
         {socket &&
-          usersAll.map((user, index) => (
+          user &&
+          allUsers.map((Gouser, index) => (
             <li
               key={index}
-              className="userInfo-item"
-              onClick={() => handleGoPrivat(user)}
+              className={`_btn userInfo-item ${Gouser._id === user.id ? "_stop" : ""}`}
+              onClick={() => handleGoPrivat(Gouser)}
             >
-              <EditIcon /> {user.name}
+              {Gouser._id !== user.id ? <EditIcon /> : <BlockIcon />}
+              {Gouser.name}
+            </li>
+          ))}
+        {errorMessage && (
+          <Typography color="error" className="error">
+            {errorMessage}
+          </Typography>
+        )}
+        {socket &&
+          !user &&
+          allUsers.map((el, index) => (
+            <li
+              key={index}
+              onClick={() => {
+                setErrorMessage("Please log in to send a message.");
+                setTimeout(() => {
+                  setErrorMessage("");
+                }, 2000);
+              }}
+              className={`_btn userInfo-item  _stop `}
+            >
+              <BlockIcon />
+              {el.name}
             </li>
           ))}
       </ul>

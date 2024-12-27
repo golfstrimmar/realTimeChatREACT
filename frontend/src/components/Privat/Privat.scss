@@ -49,19 +49,20 @@
     gap: 10px;
   }
 
-  &-button {
-    border-left: 2px solid #939393 !important;
-    border-right: 2px solid #939393 !important;
-    padding: 0.3rem !important;
-    transition: background 1.5s, box-shadow 1.8s, color 1.8s, transform 0.5s !important;
-    width: fit-content;
-    margin-top: 0 !important;
-    box-shadow: 1px 5px 10px -5px #000000, inset 1px 3px 10px -5px white !important;
-  }
+
 
   @media (max-width: 768px) {
     grid-template-columns: 1fr;
   }
+}
+
+.privat-input {
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 5px;
+  padding: 5px;
+  margin: 10px 0 0 0;
+  background-color: whitesmoke;
+
 }
 
 .buttons {
@@ -71,17 +72,13 @@
   gap: 5px;
 }
 
-.X-button {
-
-  color: white !important;
-  box-shadow: 1px 5px 10px -5px #000000, inset 1px 5px 10px -5px white !important;
-  border-radius: 100% !important;
-  width: fit-content !important;
-  border-left: 2px solid #939393 !important;
-  border-right: 2px solid #939393 !important;
-  padding: 0.3rem !important;
-  transition: background 1.5s, box-shadow 1.8s, color 1.8s, transform 0.5s !important;
+.persona-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: $b1;
 }
+
+
 
 .clear-button {
   border-radius: 5px !important;
