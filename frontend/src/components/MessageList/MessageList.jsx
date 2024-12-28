@@ -8,22 +8,15 @@ import {
   InputLabel,
 } from "@mui/material";
 import Message from "../Message/Message";
+import "./MessageList.scss";
 
-function MessageList({
-  messages,
-  handleLike,
-  handleAddComment,
-  handleDeleteComment,
-  handleEditMessage,
-  handleDeleteMessage,
-}) {
-  const [page, setPage] = useState(1); // Состояние для текущей страницы
-  const [selectedAuthor, setSelectedAuthor] = useState(""); // Состояние для выбранного автора
+function MessageList({ messages, handleAddComment, handleDeleteComment }) {
+  const [page, setPage] = useState(1);
+  const [selectedAuthor, setSelectedAuthor] = useState("");
   const [filteredMessages, setFilteredMessages] = useState(messages);
   const [currentMessages, setCurrentMessages] = useState([]);
   const messagesPerPage = 10;
 
-  // Получаем уникальных авторов
   const authors = messages.reduce((acc, message) => {
     if (!acc.some((author) => author.author === message.author)) {
       acc.push({ author: message.author, name: message.name });
@@ -76,6 +69,7 @@ function MessageList({
           value={selectedAuthor}
           onChange={handleAuthorChange}
           label="Choose an Author"
+          className="author-select"
         >
           <MenuItem value="All Authors">All Authors</MenuItem>
           {authors.map((el, index) => (
@@ -93,11 +87,7 @@ function MessageList({
             <Message
               key={index}
               message={message}
-              onLike={handleLike}
-              onAddComment={handleAddComment}
               onDeleteComment={handleDeleteComment}
-              onEditMessage={handleEditMessage}
-              onDeleteMessage={handleDeleteMessage}
             />
           ))}
       </List>

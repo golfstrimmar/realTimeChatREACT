@@ -3,6 +3,8 @@ import authReducer from "./reducers/authReducer";
 import socketReducer from "./reducers/socketReducer";
 import onlineUsersReducer from "./reducers/onlineUsersReducer";
 import AllUsersReducer from "./reducers/AllUsersReducer";
+import messageReducer from "./reducers/messageReducer";
+import errorReducer from "./reducers/errorReducer";
 // =============================================
 const localStorageAuthMiddleware = (store) => (next) => (action) => {
   const result = next(action);
@@ -25,6 +27,8 @@ const rootReducer = combineReducers({
   socket: socketReducer,
   onlineUsers: onlineUsersReducer,
   allUsers: AllUsersReducer,
+  message: messageReducer,
+  messageError: errorReducer,
 });
 
 // =============================================

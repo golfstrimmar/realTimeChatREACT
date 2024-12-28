@@ -8,11 +8,14 @@ import { setAllUsers } from "./redux/actions/AllUsersActions";
 import { io } from "socket.io-client"; // Библиотека для сокетов
 import AppRouter from "./router/AppRouter";
 import Header from "./components/Header/Header";
+import NotificationModal from "./components/Modal/NotificationModal";
+
 const serverUrl = process.env.REACT_APP_API_URL;
 
 function App() {
   const dispatch = useDispatch();
   const user = useSelector((state) => state.auth.user);
+  const messageError = useSelector((state) => state.messageError.messageError);
   let socket;
   const [isDisconnecting, setIsDisconnecting] = useState(false);
 
@@ -73,6 +76,7 @@ function App() {
     <Router>
       <Header />
       <AppRouter />
+      <NotificationModal messageError={messageError} />
     </Router>
   );
 }

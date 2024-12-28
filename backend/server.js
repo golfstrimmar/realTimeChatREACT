@@ -76,15 +76,16 @@ app.use(
 // ===================================
 io.on("connection", (socket) => {
   console.log(`*******************************************************`);
-  console.log(`**Connection id:** ${socket.id}`);
-  console.log("**userSocketMap**", userSocketMap);
+  console.log(`*+*on Connection id:*+* ${socket.id}`);
+  console.log("*+* on Connection userSocketMap*+*", userSocketMap);
   console.log(
-    "**Online users:**",
+    "*+*Online users:*+*",
     onlineUsers.map((el) => ({ name: el.user?.name, count: el?.count }))
   );
-  // =================================================
+
   socket.emit("receiveMessages");
   socket.emit("onlineUsers", onlineUsers);
+  // ==================sendMessage===============================
   socket.on("sendMessage", async (msg) => {
     try {
       const newMessage = new Message({
@@ -100,6 +101,7 @@ io.on("connection", (socket) => {
       console.error("Error sending message socket:", error);
     }
   });
+  // =====updateMessage========
   socket.on("updateMessage", async (updatedMessageData) => {
     try {
       const updatedMessage = await Message.findByIdAndUpdate(
@@ -125,6 +127,21 @@ io.on("connection", (socket) => {
       socket.emit("error", "Failed to update message.");
     }
   });
+  // ======deleteMessage======
+  socket.on("deleteMessage", async (mes) => {
+    try {
+      const message = await Message.findByIdAndDelete(mes);
+      if (!message) {
+        console.log("Message not found");
+      } else {
+        console.log("--Message deleted--:", message);
+        io.emit("deleteMessage", mes);
+      }
+    } catch (error) {
+      console.error("Error deleting message:", error);
+    }
+  });
+  // ============
   socket.on("likeMessage", async (id, type) => {
     try {
       const message = await Message.findById(id);
@@ -166,18 +183,7 @@ io.on("connection", (socket) => {
       }
     });
   });
-  socket.on("deleteMessage", async (id) => {
-    try {
-      const message = await Message.findByIdAndDelete(id);
-      if (!message) {
-        console.log("Message not found");
-      } else {
-        io.emit("deleteMessage", id);
-      }
-    } catch (error) {
-      console.error("Error deleting message:", error);
-    }
-  });
+
   socket.on("sendPrivatMessage", async (data) => {
     const { text, from, to } = data;
     try {
@@ -317,7 +323,7 @@ io.on("connection", (socket) => {
       socket.emit("error", "Unable to fetch users");
     }
   });
-  // =================================================
+  // ++++==============userConnected==============
   socket.on("userConnected", (user, socketId) => {
     userSocketMap.push({
       userName: user.name,
@@ -338,10 +344,7 @@ io.on("connection", (socket) => {
     if (userIndex == -1) {
       onlineUsers.push({ user: user, count: 1 });
     }
-    console.log("userIndex", userIndex);
-    console.log("currentUser", currentUser);
-    console.log("connectionId", connectionId);
-    console.log("socket.id", socket.id);
+
     if (userIndex == 0 && currentUser && connectionId == socket.id) {
       currentUser.count += 1;
     }
@@ -351,11 +354,12 @@ io.on("connection", (socket) => {
     // );
     // console.log("Current user:", currentUser);
     console.log("*********");
+    console.log("***on user Connected socket.id***", socket.id);
     console.log(
-      "**Online users:**",
+      "**on user Connected Online users:**",
       onlineUsers.map((el) => ({ name: el.user?.name, count: el?.count }))
     );
-    console.log("**userSocketMap**", userSocketMap);
+    console.log("**on user Connected userSocketMap**", userSocketMap);
     console.log("====================");
 
     io.emit("onlineUsers", onlineUsers);
@@ -430,12 +434,12 @@ io.on("connection", (socket) => {
     }
     userSocketMap = userSocketMap.filter((el) => el.socket !== socket.id);
     console.log(`*************`);
-    console.log(`*on  disconnect: socket.id,- ${socket.id} interrapted:** `);
+    console.log(`*-*on  disconnect: socket.id,- ${socket.id} interrapted:*-* `);
     console.log(
-      "**on  disconnect: Online users:**",
+      "*-*on  disconnect: Online users:*-*",
       onlineUsers.map((el) => ({ name: el.user?.name, count: el?.count }))
     );
-    console.log("**on  disconnect: userSocketMap**", userSocketMap);
+    console.log("*-*on  disconnect: userSocketMap*-*", userSocketMap);
     io.emit("onlineUsers", onlineUsers);
   });
 });

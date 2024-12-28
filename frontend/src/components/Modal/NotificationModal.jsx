@@ -1,47 +1,49 @@
-import React from "react";
-import {
-  Dialog,
-  DialogContent,
-  Button,
-  Typography,
-  IconButton,
-} from "@mui/material";
-import CloseIcon from "@mui/icons-material/Close";
+import React, { useEffect, useState } from "react";
+import { Dialog, DialogContent, Typography } from "@mui/material";
+import { ReactComponent as Message } from "../../assets/svg/message.svg";
+import { useDispatch, useSelector } from "react-redux";
+import { clearErrorMessage } from "../../redux/actions/errorActions";
+import "./Modal.scss";
 // ===================
-const NotificationModal = ({ open, handleCloseModalNotification, message }) => {
-  const handleClose = () => {};
+const NotificationModal = ({ messageError }) => {
+  const [message, setMessage] = useState();
+  const dispatch = useDispatch();
+  // --------------------------
+  useEffect(() => {
+    console.log("***NotificationModal- messageError***", messageError);
+    if (messageError) {
+      setMessage(messageError);
+      // setTimeout(() => {
+      //   setMessage(null);
+      //   dispatch(clearErrorMessage());
+      // }, 2000);
+    }
+  }, [messageError]);
 
   return (
-    <Dialog
-      open={open}
-      onClose={handleClose}
-      className="modalDialog"
-      BackdropProps={{
-        style: {
-          backgroundColor: "rgba(0, 0, 0, 0.8)",
-        },
-      }}
-    >
-      <IconButton
-        onClick={handleCloseModalNotification}
-        color="primary"
-        className="closeModal"
-      >
-        <CloseIcon className="deliteCard" />
-      </IconButton>
+    <Dialog open={message} className="modalDialog" BackdropProps={{}}>
       <DialogContent className="modalContent">
-        <Typography variant="p">
-          You have a new message from
+        <Typography
+          variant="p"
+          style={{ textAlign: "center", padding: "0" }}
+          className="mesSvg"
+        >
+          <Message></Message>
           <Typography
-            component="span"
-            style={{ fontWeight: "bold", color: "blue", marginLeft: "5px" }}
+            component="h6"
+            style={{
+              fontWeight: "bold",
+              color: "blue",
+              margin: "0",
+              lineHeight: "1",
+            }}
           >
-            {message && message.from.name}
+            {message}
           </Typography>
         </Typography>
-        <Typography variant="h6" className="messageText">
+        {/* <Typography variant="h6" className="messageText">
           {message && message.text}
-        </Typography>
+        </Typography> */}
       </DialogContent>
     </Dialog>
   );

@@ -1,18 +1,18 @@
 import React, { useEffect, useState } from "react";
 import { Typography, Card, Button, Box, TextField } from "@mui/material";
 import "./Privat.scss";
-import NotificationModal from "../Modal/NotificationModal";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
+import { setErrorMessage } from "../../redux/actions/errorActions";
 // ===========================
 const Privat = ({ open, privat, persona, setDataMessage }) => {
   const user = useSelector((state) => state.auth.user);
   const socket = useSelector((state) => state.socket.socket);
   const [privatMessage, setPrivatMessage] = useState();
   const [openModalNotification, setOpenModalNotification] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
   const [privatText, setPrivatText] = useState("");
   const [resiver, setResiver] = useState(null);
   const [info, setInfo] = useState([]);
+  const dispatch = useDispatch();
   // =============
 
   useEffect(() => {
@@ -24,21 +24,6 @@ const Privat = ({ open, privat, persona, setDataMessage }) => {
       setOpenModalNotification(true);
     }
   }, [privatMessage]);
-
-  useEffect(() => {
-    if (errorMessage) {
-      setTimeout(() => {
-        setErrorMessage("");
-      }, 2000);
-    }
-  }, [errorMessage]);
-  // =============================
-
-  // =============================
-  const handleCloseModalNotification = () => {
-    setOpenModalNotification(false);
-  };
-  // =============================
 
   // =============================
   const clearChat = () => {
@@ -56,7 +41,8 @@ const Privat = ({ open, privat, persona, setDataMessage }) => {
 
   const handleAddPrivatMessage = () => {
     if (!privatText) {
-      return setErrorMessage("Write something to the recipient.");
+      dispatch(setErrorMessage("Write something to the recipient."));
+      return;
     }
 
     setDataMessage({ text: privatText, from: user, to: persona });
@@ -125,9 +111,7 @@ const Privat = ({ open, privat, persona, setDataMessage }) => {
           onChange={handleInputChange}
           className="privat-input"
         />
-        <Typography variant="h5" color="error">
-          {errorMessage}
-        </Typography>
+
         <Button
           variant="contained"
           color="primary"
@@ -137,11 +121,7 @@ const Privat = ({ open, privat, persona, setDataMessage }) => {
           Add Privat Message
         </Button>
       </Box>
-      <NotificationModal
-        open={openModalNotification}
-        handleCloseModalNotification={handleCloseModalNotification}
-        message={privatMessage}
-      />
+
       <div className="buttons">
         <Button
           variant="contained"
@@ -171,20 +151,3 @@ const Privat = ({ open, privat, persona, setDataMessage }) => {
 };
 
 export default Privat;
-
-// {
-//   user && (
-//     <div style={{ marginBottom: "20px" }}>
-//       <Typography variant="h6">
-//         {/* The user is ready to communicate: */}
-//         <Typography
-//           variant="span"
-//           color="blue"
-//           style={{ margin: "8px 5px 0 5px" }}
-//         >
-//           {persona?.name}
-//         </Typography>
-//       </Typography>
-//     </div>
-//   );
-// }

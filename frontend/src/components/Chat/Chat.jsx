@@ -11,26 +11,37 @@ import {
   CardMedia,
 } from "@mui/material";
 import SendIcon from "@mui/icons-material/Send";
-import { useSelector, useDispatch } from "react-redux";
 import AttachFileIcon from "@mui/icons-material/AttachFile";
-import "./Chat.scss";
 import OnlineUsers from "../OnlineUsers/OnlineUsers";
 import AllUsers from "../AllUsers/AllUsers";
 import Loading from "../Loading/Loading";
 import MessageList from "../MessageList/MessageList";
+import "./Chat.scss";
+// ------
+import {
+  clearEditMessage,
+  clearDeliteMessage,
+} from "../../redux/actions/messageActions";
+import { useSelector, useDispatch } from "react-redux";
+import { setErrorMessage } from "../../redux/actions/errorActions";
 
 // ==============================
 
 const Chat = () => {
   const [messages, setMessages] = useState([]);
   const [message, setMessage] = useState(null);
-  const user = useSelector((state) => state.auth.user);
   const [file, setFile] = useState(null);
-  const [errorMessage, setErrorMessage] = useState("");
+  // const [errorMessage, setErrorMessage] = useState("");
   const [fileURL, setFileURL] = useState(null);
   const [loading, setLoading] = useState(false);
-  const socket = useSelector((state) => state.socket.socket);
   const [messageIdToEdit, setMessageIdToEdit] = useState(null);
+
+  const socket = useSelector((state) => state.socket.socket);
+  const user = useSelector((state) => state.auth.user);
+  const messageToEdit = useSelector((state) => state.message.messageToEdit);
+  const messageToDelite = useSelector((state) => state.message.messageToDelite);
+  const dispatch = useDispatch();
+
   // =======================
   useEffect(() => {
     axios
@@ -43,50 +54,75 @@ const Chat = () => {
       });
 
     if (socket) {
-      socket.on("deleteMessage", (id) => {
+      const handleReceiveMessage = (msg) => {
+        console.log("+++++ Receive message", msg);
+        setMessages((prevMessages) => {
+          return prevMessages.some((message) => message._id === msg._id)
+            ? prevMessages.map((message) =>
+                message._id === msg._id ? { ...message, ...msg } : message
+              )
+            : [...prevMessages, msg];
+        });
+      };
+
+      const handleUpdateMessage = (updatedMessage) => {
         setMessages((prevMessages) =>
-          prevMessages.filter((message) => message._id !== id)
+          prevMessages.map((msg) =>
+            msg._id === updatedMessage._id ? updatedMessage : msg
+          )
         );
-      });
+      };
+      const handleDeleteMessage = (mes) => {
+        console.log("+++++ Delete message", mes);
+        setMessages((prevMessages) => {
+          return prevMessages.filter((message) => {
+            return message._id !== mes._id;
+          });
+        });
+      };
+
+      socket.on("receiveMessage", handleReceiveMessage);
+      socket.on("updateMessage", handleUpdateMessage);
+      socket.on("deleteMessage", handleDeleteMessage);
+
+      return () => {
+        socket.off("receiveMessage", handleReceiveMessage);
+        socket.off("updateMessage", handleUpdateMessage);
+        socket.off("deleteMessage", handleUpdateMessage);
+      };
+    }
+  }, [socket]);
+
+  useEffect(() => {
+    console.log("+++++messages channge", messages);
+  }, [messages]);
+  //========================================
+
+  useEffect(() => {
+    if (file) {
+      const fileObjectURL = URL.createObjectURL(file);
+      setFileURL(fileObjectURL);
     }
 
     return () => {
-      if (socket) {
-        // socket.off("receiveMessage");
-        // socket.off("updateMessage");
-        socket.off("deleteMessage");
+      if (fileURL) {
+        URL.revokeObjectURL(fileURL);
       }
     };
-  }, [user, socket]);
+  }, [file]);
+  //========================================
 
-  //========================================
-  useEffect(() => {
-    if (errorMessage) {
-      setTimeout(() => {
-        setErrorMessage("");
-      }, 2000);
-    }
-  }, [errorMessage]);
-  //========================================
-  useEffect(() => {
-    console.log("++_+___+++++messages channge", messages);
-  }, [messages]);
-  //========================================
   const sendMessage = async () => {
     if (!user) {
-      setErrorMessage("Please log in to send a message.");
-      setTimeout(() => {
-        setErrorMessage("");
-      }, 2000);
+      dispatch(setErrorMessage("Please log in to send a message."));
       return;
     }
 
-    if (!message.trim()) {
-      setErrorMessage("The text is required.");
+    if (!message) {
+      dispatch(setErrorMessage("The text is required."));
       return;
     }
     if (message.trim() || file) {
-      setErrorMessage("");
       setLoading(true);
       const messageData = {
         text: message,
@@ -96,7 +132,7 @@ const Chat = () => {
       if (file) {
         const maxFileSize = 100 * 1024 * 1024; // 100 MB
         if (file.size > maxFileSize) {
-          setErrorMessage("File is too large. Max size is 100 MB.");
+          dispatch(setErrorMessage("File is too large. Max size is 100 MB."));
           return;
         }
         const formData = new FormData();
@@ -113,7 +149,7 @@ const Chat = () => {
             uploadUrl =
               "https://api.cloudinary.com/v1_1/dke0nudcz/video/upload";
           } else {
-            setErrorMessage("Unsupported file type.");
+            dispatch(setErrorMessage("Unsupported file type."));
             return;
           }
 
@@ -123,30 +159,23 @@ const Chat = () => {
           messageData.file = fileUrl;
         } catch (error) {
           console.error("Error uploading file to Cloudinary:", error);
-          setErrorMessage("Failed to upload file.");
+          dispatch(setErrorMessage("Failed to upload file."));
           return;
         }
       }
 
-      if (messageIdToEdit) {
+      if (messageToEdit) {
+        console.log("--updateMessage--", messageToEdit);
         socket.emit("updateMessage", {
           ...messageData,
-          _id: messageIdToEdit,
+          _id: messageToEdit._id,
         });
-        socket.on("receiveMessage", (updatedMessage) => {
-          setMessages((prevMessages) =>
-            prevMessages.map((msg) =>
-              msg._id === updatedMessage._id ? updatedMessage : msg
-            )
-          );
-        });
+        dispatch(clearEditMessage());
       } else {
+        console.log("--sendMessage--", messageData);
         socket.emit("sendMessage", messageData);
-        socket.on("receiveMessage", (msg) => {
-          setMessages((prevMessages) => [...prevMessages, msg]);
-        });
       }
-      setErrorMessage("");
+
       setLoading(false);
       setMessage("");
       setFile(null);
@@ -160,101 +189,31 @@ const Chat = () => {
     e.target.value = null;
   };
   // ===================================
-  const handleLike = (messageId, type) => {
-    socket.emit("likeMessage", messageId, type);
-  };
-  const handleAddComment = (id, comment) => {
-    console.log("add comment:", id, comment);
-    socket.emit("addComment", id, comment);
-  };
+
   const handleDeleteComment = (id, commentId) => {
     console.log("delete comment:", id, commentId);
     socket.emit("deleteComment", id, commentId);
   };
   // ===================================
-  const handleEditMessage = (message) => {
-    if (message) {
-      // console.log("messages", messages);
-      let temp = messages.find((msg) => msg._id === message);
-      setMessageIdToEdit(temp._id);
-      setMessage(temp.text);
-      setFileURL(temp.file);
-      console.log("chat edit message:", message);
-      //   socket.emit("deleteMessage", message);
-    }
-    // setMessage("");
-  };
-  // ===================================
-  const handleDeleteMessage = (message) => {
-    if (message) {
-      console.log("delete message:", message);
-      socket.emit("deleteMessage", message);
-      setMessage("");
-    }
-  };
-  //  ============================
   useEffect(() => {
-    if (file) {
-      const fileObjectURL = URL.createObjectURL(file);
-      setFileURL(fileObjectURL);
+    if (messageToEdit) {
+      console.log("--messageToEdit redux :", messageToEdit);
+      setMessageIdToEdit(messageToEdit._id);
+      setMessage(messageToEdit.text);
+      setFileURL(messageToEdit.file);
     }
+  }, [messageToEdit]);
 
-    return () => {
-      if (fileURL) {
-        URL.revokeObjectURL(fileURL);
-      }
-    };
-  }, [file]);
-  // const renderFilePreview = () => {
-  //   if (fileURL) {
-  //     if (file.type.startsWith("image")) {
-  //       return (
-  //         <CardMedia
-  //           component="img"
-  //           image={fileURL}
-  //           alt="Uploaded File"
-  //           className="uploadedFile"
-  //         />
-  //       );
-  //     }
-  //     if (file.type.startsWith("video")) {
-  //       return (
-  //         <CardMedia
-  //           component="video"
-  //           src={fileURL}
-  //           controls
-  //           className="uploadedFile"
-  //         />
-  //       );
-  //     }
-  //     if (fileURL.startsWith("http")) {
-  //       if (fileURL.endsWith(".mp4") || fileURL.endsWith(".webm")) {
-  //         return (
-  //           <CardMedia
-  //             component="video"
-  //             src={fileURL}
-  //             controls
-  //             className="uploadedFile"
-  //           />
-  //         );
-  //       } else if (
-  //         fileURL.endsWith(".jpg") ||
-  //         fileURL.endsWith(".jpeg") ||
-  //         fileURL.endsWith(".png")
-  //       ) {
-  //         return (
-  //           <CardMedia
-  //             component="img"
-  //             image={fileURL}
-  //             alt="Uploaded File"
-  //             className="uploadedFile"
-  //           />
-  //         );
-  //       }
-  //     }
-  //   }
-  //   return null;
-  // };
+  // ===================================
+  useEffect(() => {
+    if (messageToDelite) {
+      console.log("--messageToDelite redux :", messageToDelite);
+      socket.emit("deleteMessage", messageToDelite);
+      dispatch(clearDeliteMessage());
+    }
+  }, [messageToDelite]);
+
+  // ============
   const renderFilePreview = () => {
     // Если есть файл по ссылке или локальный файл
     const url = file ? URL.createObjectURL(file) : fileURL; // Если есть локальный файл, используем его, иначе используем URL
@@ -321,11 +280,7 @@ const Chat = () => {
       {messages.length > 0 ? (
         <MessageList
           messages={messages}
-          handleLike={handleLike}
-          handleAddComment={handleAddComment}
           handleDeleteComment={handleDeleteComment}
-          handleEditMessage={handleEditMessage}
-          handleDeleteMessage={handleDeleteMessage}
         />
       ) : (
         <Typography variant="h6">No messages yet</Typography>
@@ -335,13 +290,7 @@ const Chat = () => {
         className="chat"
       >
         <div className="cl">
-          <div className="message-exect">
-            <Typography variant="p" color="error">
-              {errorMessage}
-            </Typography>
-            {!errorMessage && loading && <Loading />}
-          </div>
-
+          {loading && <Loading />}
           <TextField
             fullWidth
             variant="outlined"

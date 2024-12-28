@@ -26,6 +26,7 @@ const AllUsers = () => {
       dispatch(setGoPrivat(Gouser));
     }
   };
+
   // =========================
   return (
     <div className=" allUsers">
@@ -53,16 +54,7 @@ const AllUsers = () => {
         {socket &&
           !user &&
           allUsers.map((el, index) => (
-            <li
-              key={index}
-              onClick={() => {
-                setErrorMessage("Please log in to send a message.");
-                setTimeout(() => {
-                  setErrorMessage("");
-                }, 2000);
-              }}
-              className={`_btn userInfo-item  _stop `}
-            >
+            <li key={index} className={`_btn userInfo-item  _stop `}>
               <BlockIcon />
               {el.name}
             </li>

@@ -1,42 +1,35 @@
 import React, { useState, useEffect } from "react";
 import {
   Typography,
-  ListItem,
-  ListItemText,
-  Button,
   Card,
   CardContent,
-  CardActions,
-  TextField,
   CardMedia,
   Divider,
-  Modal,
   Box,
 } from "@mui/material";
+
 import DeleteIcon from "@mui/icons-material/Delete";
 import CommentIcon from "@mui/icons-material/Comment";
-import "./Message.scss";
+import EditIcon from "@mui/icons-material/Edit";
 import ModalComponent from "../Modal/Modal";
 import { useSelector, useDispatch } from "react-redux";
-import EditIcon from "@mui/icons-material/Edit";
+import {
+  setEditMessage,
+  setDeliteMessage,
+} from "../../redux/actions/messageActions";
+import "./Message.scss";
+import { setErrorMessage } from "../../redux/actions/errorActions";
 // ==============
-const Message = ({
-  message,
-  onLike,
-  onAddComment,
-  onDeleteComment,
-  onEditMessage,
-  onDeleteMessage,
-}) => {
+const Message = ({ message, onDeleteComment }) => {
   // ---------------------
-  const [commentText, setCommentText] = useState("");
+
   const [open, setOpen] = useState(false);
-  const user = useSelector((state) => state.auth.user);
   const [author, setAuthor] = useState(false);
   const [authorComment, setAuthorComment] = useState(false);
   const [authorName, setAuthorName] = useState("");
-  const [ErrorMessage, setErrorMessage] = useState("");
-
+  const dispatch = useDispatch();
+  const user = useSelector((state) => state.auth.user);
+  const socket = useSelector((state) => state.socket.socket);
   // // ---------------------
   useEffect(() => {
     if (user && user.id === message.author) {
@@ -47,44 +40,34 @@ const Message = ({
     }
   }, [user, message]);
   // // ---------------------
-
-  const handleCommentChange = (e) => {
-    setCommentText(e.target.value);
-  };
-
-  const handleAddComment = () => {
-    if (user) {
-      if (commentText.trim()) {
-        setOpen(false);
-        onAddComment(message._id, {
-          text: commentText,
-          user: user.id,
-          name: user.name,
-        });
-        setCommentText("");
-        setOpen(false);
-      }
-    } else {
-      setOpen(false);
-      setErrorMessage("Please log in to add a comment. ");
-      setTimeout(() => {
-        setCommentText("");
-        setErrorMessage("");
-      }, 2000);
+  const handleLike = (messageId, type) => {
+    console.log("----like message:", messageId, type);
+    if (socket) {
+      socket.emit("likeMessage", messageId, type);
     }
   };
+
   const handleDeleteComment = (commentId) => {
     onDeleteComment(message._id, commentId);
   };
   const handleEditMessage = () => {
-    console.log("edit message:", message);
-    onEditMessage(message._id);
+    console.log("--edit message id:", message._id);
+    if (message) {
+      dispatch(setEditMessage(message));
+    }
   };
   const handleDeliteMessage = () => {
-    onDeleteMessage(message._id);
+    console.log("--delite message id:", message._id);
+    if (message) {
+      dispatch(setDeliteMessage(message));
+    }
   };
   const handleOpenModal = () => {
-    setOpen(true);
+    if (user) {
+      setOpen(true);
+    } else {
+      dispatch(setErrorMessage("Please log in to add a comment."));
+    }
   };
   const handleCloseModal = () => {
     setOpen(false);
@@ -99,6 +82,7 @@ const Message = ({
             sx={{ display: "flex", alignItems: "center", mb: 1 }}
             className="MessageInfo"
           >
+            {/* message.name*/}
             {message.name && (
               <Typography
                 variant="caption"
@@ -149,32 +133,34 @@ const Message = ({
               className="like-button"
               role="img"
               aria-label="like"
-              onClick={() => onLike(message._id, "positive")}
+              onClick={() => handleLike(message._id, "positive")}
             >
               👍
             </span>
             {message.positiveLikes}
-
             <span
               className="like-button"
               role="img"
               aria-label="dislike"
-              onClick={() => onLike(message._id, "negative")}
+              onClick={() => handleLike(message._id, "negative")}
             >
               👎
             </span>
             {message.negativeLikes}
+            {/* Comment*/}
             <CommentIcon
               className="comment-icon"
               onClick={handleOpenModal}
               color="primary"
             />
+            {/* Edit*/}
             {author && (
               <EditIcon
                 className="edit-icon deliteCard"
                 onClick={handleEditMessage}
               />
             )}
+            {/* Delete*/}
             {author && (
               <DeleteIcon
                 color="error"
@@ -182,10 +168,6 @@ const Message = ({
                 onClick={handleDeliteMessage}
               />
             )}
-
-            <Typography variant="h5" color="error" style={{ marginTop: "8px" }}>
-              {ErrorMessage}
-            </Typography>
           </Typography>
           {/* Divider */}
           <Divider style={{ margin: "12px 0" }} />
@@ -240,11 +222,10 @@ const Message = ({
       </Card>
       <ModalComponent
         open={open}
+        setOpen={setOpen}
         handleCloseModal={handleCloseModal}
-        handleAddComment={handleAddComment}
-        handleCommentChange={handleCommentChange}
-        commentText={commentText}
-      ></ModalComponent>
+        message={message}
+      />
     </>
   );
 };
