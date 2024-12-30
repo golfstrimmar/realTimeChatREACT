@@ -40,7 +40,8 @@ app.use("/images", express.static(imageCachePath));
 // ===================================================
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:3000", // Разрешаем доступ с фронтенда
+    origin:
+      "http://localhost:3000https://real-time-chat-react-sigma.vercel.app/",
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     allowedHeaders: ["Content-Type", "Authorization"],
   },
@@ -49,7 +50,9 @@ const io = new Server(server, {
 // ===================================================
 app.use(
   cors({
-    origin: "http://localhost:3000",
+    // origin: "http://localhost:3000",
+    origin:
+      "http://localhost:3000https://real-time-chat-react-sigma.vercel.app/",
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
