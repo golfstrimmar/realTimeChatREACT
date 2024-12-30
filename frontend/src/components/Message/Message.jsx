@@ -11,25 +11,25 @@ import {
 import DeleteIcon from "@mui/icons-material/Delete";
 import CommentIcon from "@mui/icons-material/Comment";
 import EditIcon from "@mui/icons-material/Edit";
-import ModalComponent from "../Modal/Modal";
 import { useSelector, useDispatch } from "react-redux";
 import {
   setEditMessage,
   setDeliteMessage,
 } from "../../redux/actions/messageActions";
 import "./Message.scss";
-import { setErrorMessage } from "../../redux/actions/errorActions";
 // ==============
-const Message = ({ message, onDeleteComment }) => {
+const Message = ({
+  message,
+  handelOpenCommentModal,
+  handleDeleteComment,
+  handleEditComment,
+}) => {
   // ---------------------
-
-  const [open, setOpen] = useState(false);
   const [author, setAuthor] = useState(false);
-  const [authorComment, setAuthorComment] = useState(false);
-  const [authorName, setAuthorName] = useState("");
   const dispatch = useDispatch();
   const user = useSelector((state) => state.auth.user);
   const socket = useSelector((state) => state.socket.socket);
+
   // // ---------------------
   useEffect(() => {
     if (user && user.id === message.author) {
@@ -47,9 +47,6 @@ const Message = ({ message, onDeleteComment }) => {
     }
   };
 
-  const handleDeleteComment = (commentId) => {
-    onDeleteComment(message._id, commentId);
-  };
   const handleEditMessage = () => {
     console.log("--edit message id:", message._id);
     if (message) {
@@ -62,16 +59,9 @@ const Message = ({ message, onDeleteComment }) => {
       dispatch(setDeliteMessage(message));
     }
   };
-  const handleOpenModal = () => {
-    if (user) {
-      setOpen(true);
-    } else {
-      dispatch(setErrorMessage("Please log in to add a comment."));
-    }
-  };
-  const handleCloseModal = () => {
-    setOpen(false);
-  };
+
+  // ---------------------
+
   // ---------------------
   return (
     <>
@@ -84,14 +74,17 @@ const Message = ({ message, onDeleteComment }) => {
           >
             {/* message.name*/}
             {message.name && (
-              <Typography
-                variant="caption"
-                color="textSecondary"
-                gutterBottom
-                className="message-author"
-              >
-                {message.name}
-              </Typography>
+              <>
+                <Typography
+                  variant="caption"
+                  color="textSecondary"
+                  gutterBottom
+                  className="message-author"
+                >
+                  {message.name}
+                </Typography>
+                {/* </Tooltip> */}
+              </>
             )}
             {/* Message timestamp */}
             <Typography
@@ -150,7 +143,7 @@ const Message = ({ message, onDeleteComment }) => {
             {/* Comment*/}
             <CommentIcon
               className="comment-icon"
-              onClick={handleOpenModal}
+              onClick={() => handelOpenCommentModal(message)}
               color="primary"
             />
             {/* Edit*/}
@@ -197,12 +190,21 @@ const Message = ({ message, onDeleteComment }) => {
                     >
                       {comment.text}
                     </Typography>
-
+                    {user && comment.user === user.id && (
+                      <EditIcon
+                        className="edit-icon deliteCard"
+                        onClick={() => {
+                          handleEditComment(message, comment._id);
+                        }}
+                      />
+                    )}
                     {user && comment.user === user.id && (
                       <DeleteIcon
                         color="error"
                         className="delete-icon"
-                        onClick={() => handleDeleteComment(comment._id)}
+                        onClick={() =>
+                          handleDeleteComment(message, comment._id)
+                        }
                       />
                     )}
                   </div>
@@ -220,12 +222,6 @@ const Message = ({ message, onDeleteComment }) => {
           </Typography>
         </CardContent>
       </Card>
-      <ModalComponent
-        open={open}
-        setOpen={setOpen}
-        handleCloseModal={handleCloseModal}
-        message={message}
-      />
     </>
   );
 };

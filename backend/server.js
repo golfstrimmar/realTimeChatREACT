@@ -14,7 +14,9 @@ import authRoutes from "./routes/authRoutes.js";
 import { fileURLToPath } from "url";
 import path from "path";
 import fs from "fs";
-
+import { Types } from "mongoose";
+const { ObjectId } = Types;
+import { v4 as uuidv4 } from "uuid";
 // ===================================
 const upload = multer();
 dotenv.config();
@@ -30,21 +32,12 @@ let userIndex = null;
 let currentUser = null;
 let userSocketMap = [];
 // ===================================================
-// Получаем путь к текущей директории с помощью import.meta.url
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
-// Папка, где будут храниться кэшированные изображения
 const imageCachePath = path.join(__dirname, "imageCache");
-
-// Создаем директорию для кэшированных изображений, если она не существует
 fs.mkdirSync(imageCachePath, { recursive: true });
-
-// Настройка статического сервера для изображений
-// Это будет отдавать файлы из папки imageCache
 app.use("/images", express.static(imageCachePath));
 // ===================================================
-// Настроим Socket.IO сервер
 const io = new Server(server, {
   cors: {
     origin: "http://localhost:3000", // Разрешаем доступ с фронтенда
@@ -54,7 +47,6 @@ const io = new Server(server, {
 });
 
 // ===================================================
-// Миддлвар для CORS
 app.use(
   cors({
     origin: "http://localhost:3000",
@@ -141,7 +133,7 @@ io.on("connection", (socket) => {
       console.error("Error deleting message:", error);
     }
   });
-  // ============
+  // ============likeMessage
   socket.on("likeMessage", async (id, type) => {
     try {
       const message = await Message.findById(id);
@@ -157,6 +149,7 @@ io.on("connection", (socket) => {
       console.error("Error:", error);
     }
   });
+  // ============addComment
   socket.on("addComment", async (id, comment) => {
     try {
       const message = await Message.findById(id);
@@ -170,6 +163,37 @@ io.on("connection", (socket) => {
       console.error("Error adding comment:", error);
     }
   });
+  // ============commentToEdit
+  socket.on("commentToEdit", (currentMessageId, commentIdToEdit) => {
+    console.log("Received data:", currentMessageId, commentIdToEdit);
+    Message.findById(currentMessageId)
+      .then((message) => {
+        if (message) {
+          let comment = null;
+          message.comments.forEach((el) => {
+            if (
+              (el) => JSON.stringify(el._id) === JSON.stringify(commentIdToEdit)
+            ) {
+              console.log("Found comment:", el);
+              return (comment = el);
+            }
+          });
+
+          if (comment) {
+            comment.text = commentIdToEdit.text;
+            message.save().then((updatedMessage) => {
+              io.emit("updateMessage", updatedMessage);
+            });
+          }
+        } else {
+          console.log("Message not found with id:", currentMessageId);
+        }
+      })
+      .catch((err) => {
+        console.log("Error:", err);
+      });
+  });
+  // ============deleteComment
   socket.on("deleteComment", (messageId, commentId) => {
     Message.findById(messageId).then((message) => {
       if (message) {
@@ -183,24 +207,29 @@ io.on("connection", (socket) => {
       }
     });
   });
-
+  // ============
   socket.on("sendPrivatMessage", async (data) => {
-    const { text, from, to } = data;
+    const { text, from, to, file } = data;
+    const messageId = uuidv4();
     try {
       const sender = await User.findById(from.id);
       sender.correspondence.push({
-        text,
+        _id: messageId,
+        text: text,
         from: from.id,
         to: to._id,
+        file: file,
         status: "sent",
       });
       await sender.save();
 
       const receiver = await User.findById(to._id);
       receiver.correspondence.push({
-        text,
+        _id: messageId,
+        text: text,
         from: from.id,
         to: to._id,
+        file: file,
         status: "received",
       });
       await receiver.save();
@@ -236,6 +265,81 @@ io.on("connection", (socket) => {
       console.error("Error saving private message:", error);
     }
   });
+  // ============
+  socket.on("delitePrivatMessage", async (mes) => {
+    const { from, to, text, _id } = mes;
+    console.log("PrivatMessage to delite id", _id);
+    try {
+      const sender = await User.findById(from._id);
+      let PrivatMessage = null;
+      sender.correspondence.forEach((el) => {
+        if (JSON.stringify(el._id) === JSON.stringify(_id)) {
+          return (PrivatMessage = el);
+        }
+      });
+      sender.correspondence = sender.correspondence.filter(
+        (el) => el !== PrivatMessage
+      );
+      await sender.save();
+      //  ----
+
+      //  ----
+      let PrivatMessagereceiver = null;
+      const receiver = await User.findById(to._id);
+      console.log("====receiver", receiver);
+      receiver.correspondence.forEach((el) => {
+        if (JSON.stringify(el._id) === JSON.stringify(_id)) {
+          return (PrivatMessagereceiver = el);
+        }
+      });
+      console.log("==========PrivatMessage receiver", PrivatMessagereceiver);
+      receiver.correspondence = receiver.correspondence.filter(
+        (el) => el !== PrivatMessagereceiver
+      );
+      await receiver.save();
+      //  ----
+
+      const updatedSender = await User.findById(from._id)
+        .populate("correspondence.from", "name")
+        .populate("correspondence.to", "name")
+        .select("-password");
+      const updatedReceiver = await User.findById(to._id)
+        .populate("correspondence.from", "name")
+        .populate("correspondence.to", "name")
+        .select("-password");
+
+      let fromSocket = userSocketMap.filter((el) => el.user === from._id);
+      let toSocket = userSocketMap.filter((el) => el.user === to._id);
+
+      fromSocket.forEach((el) => {
+        io.to(el.socket).emit("UserData", updatedSender);
+        console.log(`сообщение отправлено в сокет ${el.socket}`);
+      });
+      toSocket.forEach((el) => {
+        io.to(el.socket).emit("UserData", updatedReceiver);
+        console.log(`сообщение отправлено в сокет ${el.socket}`);
+      });
+    } catch (error) {
+      console.error("Error saving private message:", error);
+    }
+  });
+  // ============
+  socket.on("newUser", async (formData) => {
+    console.log("========newUser", formData);
+    const users = await User.find().select("-password");
+    console.log("=======users", users);
+    try {
+      const users = await User.find().select("-password");
+      users = [...users, formData];
+      console.log("++++users", users);
+      io.emit("Users", users);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      socket.emit("error", "Unable to fetch users");
+    }
+    io.emit("Users", users);
+  });
+  // ============
   socket.on("allUsers", async () => {
     try {
       const users = await User.find().select("-password");
@@ -245,6 +349,7 @@ io.on("connection", (socket) => {
       socket.emit("error", "Unable to fetch users");
     }
   });
+  // ============
   socket.on("User", async (id) => {
     try {
       const userToFind = await User.findById(id)
@@ -316,8 +421,6 @@ io.on("connection", (socket) => {
         console.log(`сообщение отправлено в сокет ${el.socket}`);
       });
       // -------------------
-      // io.to().emit("UserData", user);
-      // io.to().emit("UserData", reciver);
     } catch (error) {
       console.error("Error fetching users:", error);
       socket.emit("error", "Unable to fetch users");

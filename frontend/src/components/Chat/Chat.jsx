@@ -1,8 +1,6 @@
-import React, { useState, useEffect } from "react";
-import Message from "../Message/Message";
+import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import {
-  List,
   Typography,
   Paper,
   IconButton,
@@ -10,6 +8,7 @@ import {
   TextField,
   CardMedia,
 } from "@mui/material";
+
 import SendIcon from "@mui/icons-material/Send";
 import AttachFileIcon from "@mui/icons-material/AttachFile";
 import OnlineUsers from "../OnlineUsers/OnlineUsers";
@@ -17,6 +16,7 @@ import AllUsers from "../AllUsers/AllUsers";
 import Loading from "../Loading/Loading";
 import MessageList from "../MessageList/MessageList";
 import "./Chat.scss";
+import sha1 from "js-sha1";
 // ------
 import {
   clearEditMessage,
@@ -31,17 +31,25 @@ const Chat = () => {
   const [messages, setMessages] = useState([]);
   const [message, setMessage] = useState(null);
   const [file, setFile] = useState(null);
-  // const [errorMessage, setErrorMessage] = useState("");
   const [fileURL, setFileURL] = useState(null);
   const [loading, setLoading] = useState(false);
   const [messageIdToEdit, setMessageIdToEdit] = useState(null);
-
+  const inputRef = useRef(null);
   const socket = useSelector((state) => state.socket.socket);
   const user = useSelector((state) => state.auth.user);
   const messageToEdit = useSelector((state) => state.message.messageToEdit);
   const messageToDelite = useSelector((state) => state.message.messageToDelite);
   const dispatch = useDispatch();
-
+  const [isFocused, setIsFocused] = useState(false);
+  const prevMessage = useRef(message);
+  // =======================
+  // =======================
+  useEffect(() => {
+    if (prevMessage.current !== null && message === null) {
+      inputRef.current.blur();
+    }
+    prevMessage.current = message;
+  }, [message, messageToEdit, isFocused]);
   // =======================
   useEffect(() => {
     axios
@@ -112,7 +120,7 @@ const Chat = () => {
   }, [file]);
   //========================================
 
-  const sendMessage = async () => {
+  const sendMessage = async (event) => {
     if (!user) {
       dispatch(setErrorMessage("Please log in to send a message."));
       return;
@@ -170,14 +178,14 @@ const Chat = () => {
           ...messageData,
           _id: messageToEdit._id,
         });
+
         dispatch(clearEditMessage());
       } else {
         console.log("--sendMessage--", messageData);
         socket.emit("sendMessage", messageData);
       }
-
+      setMessage(null);
       setLoading(false);
-      setMessage("");
       setFile(null);
       setFileURL(null);
     }
@@ -190,9 +198,50 @@ const Chat = () => {
   };
   // ===================================
 
-  const handleDeleteComment = (id, commentId) => {
-    console.log("delete comment:", id, commentId);
-    socket.emit("deleteComment", id, commentId);
+  // ===================================
+  const extractPublicId = (url) => {
+    const regex = /\/v(\d+)\/(.*)\./;
+    const match = url.match(regex);
+    return match ? match[2] : null;
+  };
+
+  // Функция для создания подписи
+  const createSignature = (publicId, apiSecret, timestamp) => {
+    // Формируем строку для подписи: public_id=...&timestamp=...&api_secret=...
+    const params = `public_id=${publicId}&timestamp=${timestamp}`;
+    const signature = sha1(`${params}${apiSecret}`); // Генерируем подпись с помощью sha1
+    return signature;
+  };
+
+  const deleteImageFromCloudinary = async (fileUrl) => {
+    const publicId = extractPublicId(fileUrl); // Извлекаем public_id
+
+    if (publicId) {
+      const apiKey = "125957593299356";
+      const apiSecret = "GUEplX6OFLU7oTwpe4IGFdf_V4w";
+      const timestamp = Math.floor(Date.now() / 1000);
+      const signature = createSignature(publicId, apiSecret, timestamp);
+
+      try {
+        const response = await axios.post(
+          "https://api.cloudinary.com/v1_1/dke0nudcz/image/destroy",
+          {
+            public_id: publicId,
+            api_key: apiKey,
+            signature: signature,
+            timestamp: timestamp,
+          }
+        );
+
+        if (response.data.result === "ok") {
+          console.log("Image successfully deleted from Cloudinary");
+        } else {
+          console.log("Failed to delete image from Cloudinary", response.data);
+        }
+      } catch (error) {
+        console.error("Error deleting image from Cloudinary:", error);
+      }
+    }
   };
   // ===================================
   useEffect(() => {
@@ -201,22 +250,28 @@ const Chat = () => {
       setMessageIdToEdit(messageToEdit._id);
       setMessage(messageToEdit.text);
       setFileURL(messageToEdit.file);
+    } else {
+      dispatch(clearEditMessage());
+      setMessageIdToEdit(null);
+      setMessage(null);
+      setFileURL(null);
     }
   }, [messageToEdit]);
-
   // ===================================
   useEffect(() => {
     if (messageToDelite) {
       console.log("--messageToDelite redux :", messageToDelite);
+      if (messageToDelite.file) {
+        deleteImageFromCloudinary(messageToDelite.file);
+      }
       socket.emit("deleteMessage", messageToDelite);
       dispatch(clearDeliteMessage());
     }
   }, [messageToDelite]);
 
-  // ============
+  // ============-
   const renderFilePreview = () => {
-    // Если есть файл по ссылке или локальный файл
-    const url = file ? URL.createObjectURL(file) : fileURL; // Если есть локальный файл, используем его, иначе используем URL
+    const url = file ? URL.createObjectURL(file) : fileURL;
 
     if (url) {
       if (url.startsWith("http")) {
@@ -271,7 +326,28 @@ const Chat = () => {
 
     return null;
   };
+  // ============-
 
+  const handleFocus = () => {
+    if (!isFocused) {
+      console.log("focus");
+      setIsFocused(true);
+    }
+  };
+
+  const handleBlur = () => {
+    if (isFocused) {
+      console.log("Blur");
+      setIsFocused(false);
+    }
+  };
+  //  ============================
+  const handleInput = (e) => {
+    if (e.target.value) {
+      return setMessage(e.target.value);
+    }
+    // setMessage(null);
+  };
   //  ============================
   return (
     <div className="chat-container">
@@ -280,10 +356,9 @@ const Chat = () => {
       {messages.length > 0 ? (
         <MessageList
           messages={messages}
-          handleDeleteComment={handleDeleteComment}
         />
       ) : (
-        <Typography variant="h6">No messages yet</Typography>
+        <Typography variant="h6" className="noMessages">No messages yet</Typography>
       )}
       <Paper
         style={{ padding: "26px 15px 15px 15px", marginTop: "16px" }}
@@ -295,12 +370,13 @@ const Chat = () => {
             fullWidth
             variant="outlined"
             label="Type a message..."
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            multiline
-            rows={4}
+            value={message || ""}
+            inputRef={inputRef}
+            onChange={(e) => handleInput(e)}
             size="small"
             className="messageInput"
+            onFocus={handleFocus}
+            onBlur={handleBlur}
           />
           <Button
             onClick={sendMessage}
@@ -308,6 +384,7 @@ const Chat = () => {
             className="sendButton"
           />
         </div>
+        {/* --------add file */}
         <IconButton component="label" className="fileInput">
           <AttachFileIcon />
           <input
@@ -318,6 +395,7 @@ const Chat = () => {
           />
         </IconButton>
         {renderFilePreview()}
+        {/* ------------ */}
       </Paper>
     </div>
   );

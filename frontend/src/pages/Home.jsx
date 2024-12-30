@@ -5,9 +5,9 @@ import chatBg from "../assets/img/chat.jpg";
 const HomePage = ({ messages, socket }) => {
   return (
     <div className="page-container home">
-      {/* <div className="imgs">
+      <div className="imgs">
         <img src={chatBg} alt="" />
-      </div> */}
+      </div>
       <Typography variant="h3" style={{ marginBottom: "20px" }}>
         Welcome to the Chat!
       </Typography>

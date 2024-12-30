@@ -2,7 +2,10 @@
 
 .message-card {
   position: relative;
-  padding: 0 0 20px 0;
+}
+
+.message-card-content {
+  padding: 10px !important;
 }
 
 .message-card-content *::not(.comment-icon) {
@@ -10,8 +13,12 @@
 }
 
 .message-text {
-  margin: 10px 0 20px 0 !important;
+  margin: 0 0 20px 0 !important;
   border-radius: 5px;
+}
+
+.message-file-container {
+  margin: 0 0 10px 0;
 }
 
 #author-select {

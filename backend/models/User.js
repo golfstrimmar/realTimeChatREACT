@@ -1,66 +1,69 @@
 import mongoose from "mongoose";
 
-// Определяем схему пользователя
 const userSchema = new mongoose.Schema({
   name: {
     type: String,
-    required: true, // Имя пользователя обязательно
-    trim: true, // Убираем пробелы по краям
-    minlength: [3, "Name must be at least 3 characters"], // Минимальная длина имени
-    maxlength: [100, "Name must be less than 100 characters"], // Максимальная длина имени
+    required: true,
+    trim: true,
+    minlength: [3, "Name must be at least 3 characters"],
+    maxlength: [100, "Name must be less than 100 characters"],
   },
   email: {
     type: String,
-    required: true, // Email обязателен для пользователя
-    unique: true, // Email должен быть уникальным
-    lowercase: true, // Преобразуем email в нижний регистр
-    trim: true, // Убираем пробелы по краям
-    match: [/.+@.+\..+/, "Please provide a valid email address"], // Валидация на правильный формат email
+    required: true,
+    unique: true,
+    lowercase: true,
+    trim: true,
+    match: [/.+@.+\..+/, "Please provide a valid email address"],
   },
   password: {
     type: String,
-    required: true, // Пароль обязателен
-    minlength: [6, "Password must be at least 6 characters"], // Минимальная длина пароля
+    required: true,
+    minlength: [6, "Password must be at least 6 characters"],
   },
   picture: {
-    type: String, // URL изображения пользователя
-    default: "", // По умолчанию пустое поле
+    type: String,
+    default: "",
   },
   role: {
     type: String,
-    enum: ["user", "admin"], // Роль может быть только "user" или "admin"
-    default: "user", // Если роль не указана, то по умолчанию будет "user"
+    enum: ["user", "admin"],
+    default: "user",
   },
   correspondence: [
     {
+      _id: { type: String },
       text: String,
-      from: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, // Ссылка на отправителя
-      to: { type: mongoose.Schema.Types.ObjectId, ref: "User" }, // Ссылка на получателя
+      from: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+      to: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
       status: {
         type: String,
         enum: ["sent", "received", "delete", "archived"],
         required: true,
-      }, // Статус сообщения
-      timestamp: { type: Date, default: Date.now }, // Время отправки
+      },
+      file: String,
+      timestamp: { type: Date, default: Date.now },
     },
   ],
+  online: {
+    type: Boolean,
+    default: false,
+  },
   createdAt: {
     type: Date,
-    default: Date.now, // Дата создания пользователя
+    default: Date.now,
   },
   updatedAt: {
     type: Date,
-    default: Date.now, // Дата последнего обновления
+    default: Date.now,
   },
 });
 
-// Хук для обновления времени изменения перед сохранением
 userSchema.pre("save", function (next) {
-  this.updatedAt = Date.now(); // Обновляем дату последнего изменения
+  this.updatedAt = Date.now();
   next();
 });
 
-// Создаем модель пользователя
 const User = mongoose.model("User", userSchema);
 
 export default User;

@@ -1,19 +1,29 @@
- .logo {
-   svg {
-     width: 40px;
-     height: 40px;
-   }
- }
+@import "../../scss/common/colors.scss";
 
- @media (max-width: 920px) {
-   .logo {
-     svg {
-       width: 30px;
-       height: 30px;
-     }
-   }
+.logo {
+  svg {
+    width: 40px;
+    height: 40px;
+  }
+}
 
-   .ContainerHeader {
-     padding: 0;
-   }
- }
+.user-name {
+  background-color: $l-light;
+  padding: 3px 10px;
+  border-radius: 50%;
+  font-size: 14px;
+  margin-left: 10px;
+}
+
+@media (max-width: 920px) {
+  .logo {
+    svg {
+      width: 30px;
+      height: 30px;
+    }
+  }
+
+  .ContainerHeader {
+    padding: 0;
+  }
+}

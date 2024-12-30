@@ -1,10 +1,13 @@
 // src/components/Register.js
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { TextField, Button, Typography, Container, Box } from "@mui/material";
-
+import { useSelector, useDispatch } from "react-redux";
+import Loading from "../components/Loading/Loading";
+import { setErrorMessage } from "../redux/actions/errorActions";
 const Register = () => {
+  const dispatch = useDispatch();
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     name: "",
@@ -12,8 +15,8 @@ const Register = () => {
     password: "",
   });
   const [errors, setErrors] = useState({});
-  const [errorMessage, setErrorMessage] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
+  const [loading, setLoading] = useState(false);
+  const socket = useSelector((state) => state.socket.socket);
   // ------------------------------------------------------
 
   // ------------------------------------------------------
@@ -34,26 +37,31 @@ const Register = () => {
       errors.password = "Password must be at least 6 characters";
     return errors;
   };
+  // ------------------------------
 
+  // ------------------------------
   const handleSubmit = async (e) => {
     e.preventDefault();
     const validationErrors = validate();
-    setErrorMessage("");
-    setSuccessMessage("");
     setErrors(validationErrors);
 
     if (Object.keys(validationErrors).length === 0) {
+      setLoading(true);
       try {
         await axios.post(
           `${process.env.REACT_APP_API_URL}/auth/register`,
           formData
         );
-        setSuccessMessage("Registration successful");
         setTimeout(() => {
+          dispatch(setErrorMessage("Registration successful"));
+          setLoading(false);
+          socket.emit("newUser", formData);
+
           navigate("/login");
         }, 2000);
       } catch (error) {
-        setErrorMessage(error.response.data.message);
+        setLoading(false);
+        dispatch(setErrorMessage(error.response.data.message));
         console.error(error.response.data);
       }
     }
@@ -61,6 +69,7 @@ const Register = () => {
 
   return (
     <Container maxWidth="xs" className="pageContent">
+      {loading && <Loading />}
       <Box
         sx={{
           display: "flex",
@@ -114,10 +123,6 @@ const Register = () => {
               variant="outlined"
             />
           </div>
-          {errors && <Typography color="error">{errorMessage}</Typography>}
-          {successMessage && (
-            <Typography color="success">{successMessage}</Typography>
-          )}
           <Button
             fullWidth
             variant="contained"

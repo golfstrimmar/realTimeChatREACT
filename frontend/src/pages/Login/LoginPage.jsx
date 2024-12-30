@@ -7,6 +7,8 @@ import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
 import { useSelector, useDispatch } from "react-redux";
 import { setOnlineUsers } from "../../redux/actions/onlineUsersActions";
 import { setUser } from "../../redux/actions/authActions";
+import { setErrorMessage } from "../../redux/actions/errorActions";
+import Loading from "../../components/Loading/Loading";
 // ======================
 const Login = () => {
   const dispatch = useDispatch();
@@ -16,9 +18,8 @@ const Login = () => {
     password: "",
   });
   const [errors, setErrors] = useState({});
-  const [errorMessage, setErrorMessage] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
   const socket = useSelector((state) => state.socket.socket);
+  const [loading, setLoading] = useState(false);
   // ---------------------------------------
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -38,12 +39,11 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setErrorMessage("");
-    setSuccessMessage("");
     const validationErrors = validate();
     setErrors(validationErrors);
 
     if (Object.keys(validationErrors).length === 0) {
+      setLoading(true);
       try {
         const response = await axios.post(
           `${process.env.REACT_APP_API_URL}/auth/login`,
@@ -52,17 +52,18 @@ const Login = () => {
         const { user, token } = response.data;
         localStorage.setItem("user", JSON.stringify(user));
         dispatch(setUser(user, token));
-        setSuccessMessage("Login successful");
+        dispatch(setErrorMessage("Login successful"));
         console.log("***socket emit userConnected***", user);
         socket.emit("userConnected", user, socket.id);
         socket.on("onlineUsers", (users) => {
           dispatch(setOnlineUsers(users));
         });
+        setLoading(false);
         setTimeout(() => {
           navigate("/");
         }, 1000);
       } catch (error) {
-        setErrorMessage(error.response.data.message);
+        dispatch(setErrorMessage(error.response.data.message));
         console.error(error.response.data);
       }
     }
@@ -71,7 +72,7 @@ const Login = () => {
   // Обработчик входа через Google
   const handleGoogleLoginSuccess = (response) => {
     const { credential } = response;
-
+    setLoading(true);
     axios
       .post(`${process.env.REACT_APP_API_URL}/auth/google`, {
         token: credential,
@@ -83,21 +84,21 @@ const Login = () => {
         localStorage.setItem("token", token);
 
         dispatch(setUser(user, token));
-        setSuccessMessage("Google login successful");
-
+        dispatch(setErrorMessage("Google login successful"));
+        setLoading(false);
         setTimeout(() => {
           navigate("/");
         }, 2000);
       })
       .catch((error) => {
-        setErrorMessage("Google login failed");
+        dispatch(setErrorMessage("Google login failed."));
         console.error(error);
       });
   };
   // Обработчик ошибки входа через Google
   const handleGoogleLoginFailure = (error) => {
     console.error("Google login failed", error);
-    setErrorMessage("Google login failed");
+    dispatch(setErrorMessage("Google login failed"));
   };
   // ======================
   return (
@@ -142,10 +143,7 @@ const Login = () => {
               variant="outlined"
             />
           </div>
-          {errors && <Typography color="error">{errorMessage}</Typography>}
-          {successMessage && (
-            <Typography color="success">{successMessage}</Typography>
-          )}
+
           <Button
             fullWidth
             variant="contained"
@@ -165,6 +163,7 @@ const Login = () => {
           </GoogleOAuthProvider>
         </Box>
       </Box>
+      {loading && <Loading />}
     </Container>
   );
 };

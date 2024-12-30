@@ -1,15 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-import {
-  Container,
-  Box,
-  Typography,
-  Paper,
-  List,
-  ListItem,
-  Divider,
-  CardMedia,
-} from "@mui/material";
+import { Container, Box, Typography, Paper, CardMedia } from "@mui/material";
 
 import "./Profile.scss";
 import { ReactComponent as AvatarSVG } from "../../assets/svg/avatar.svg";

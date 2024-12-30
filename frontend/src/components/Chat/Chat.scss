@@ -9,8 +9,13 @@
   object-position: center;
 }
 
+.noMessages {
+  position: relative;
+  z-index: 4;
+  color: $blue-deep;
+}
+
 .fileInput {
-  margin: 20px 0 !important;
   background-color: whitesmoke !important;
   border-radius: 10px;
 }
@@ -18,6 +23,7 @@
 .messageInput {
   background-color: whitesmoke !important;
   border-radius: 10px;
+  width: calc(100% - 100px) !important;
 
   .MuiInputBase-root {
     border-radius: 10px;
@@ -37,10 +43,16 @@
 .chat {
   position: fixed;
   bottom: 0;
-  z-index: 200px;
   width: 100%;
   left: 0;
   background-color: $l-light !important;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.fileInput {
+  max-width: 40px;
 }
 
 .cl {
@@ -51,7 +63,7 @@
   background-color: $blue !important;
   color: white !important;
   box-shadow: 1px 5px 20px -5px #000000;
-
+  cursor: pointer;
   border-left: 2px solid #939393;
   border-right: 2px solid #939393;
   transition: background 1.5s, box-shadow 1.8s, color 1.8s, transform 0.5s;

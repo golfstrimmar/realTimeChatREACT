@@ -1,0 +1,24 @@
+.headermenu {
+  display: flex;
+  align-items: center;
+
+  .header-link {
+    display: grid;
+    align-items: center;
+    grid-template-columns: 25px 1fr;
+    gap: 5px;
+    width: 100%;
+  }
+
+  @media (max-width: 900px) {
+    flex-direction: column;
+
+  }
+
+  .avatarUser-MemuIcon,
+  .user-name {
+    @media (max-width: 900px) {
+      display: none;
+    }
+  }
+}

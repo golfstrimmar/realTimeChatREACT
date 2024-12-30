@@ -1,65 +1,90 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
   IconButton,
   TextField,
-  CardMedia,
   Button,
-  Typography,
 } from "@mui/material";
 import CloseIcon from "@mui/icons-material/Close";
 import "./Modal.scss";
 import { useSelector, useDispatch } from "react-redux";
-// import { setErrorMessage } from "./redux/actions/errorActions";
 const ModalComponent = ({
-  open,
-  setOpen,
-  handleCloseModal,
-  // handleCommentChange,
+  openCommentModal,
+  currentMessage,
+  setOpenCommentModal,
   message,
+  commentIdToEdit,
+  setCommentIdToEdit,
 }) => {
   const [commentText, setCommentText] = useState("");
-  // const dispatch = useDispatch();
   const user = useSelector((state) => state.auth.user);
   const socket = useSelector((state) => state.socket.socket);
-  //  =========================
+  // =========================
+  useEffect(() => {
+    console.log("currentMessage", currentMessage);
+    console.log("openCommentModal", openCommentModal);
+  }, [currentMessage, openCommentModal]);
+  // =========================
+  useEffect(() => {
+    if (commentIdToEdit) {
+      const currentComment = currentMessage.comments.find(
+        (comment) => comment._id === commentIdToEdit
+      );
+      setCommentText(currentComment.text);
+    } else {
+      setCommentText("");
+    }
+  }, [commentIdToEdit]);
+  // =========================
   const handleAddComment = () => {
-    // if (user) {
-    if (commentText.trim()) {
-      setOpen(false);
-      const comment =
-        (message._id,
-        {
+    if (commentIdToEdit) {
+      if (user && commentText.trim()) {
+        const commentToEdit = {
+          text: commentText,
+          commentIdToEdit: commentIdToEdit,
+        };
+        console.log("--modal Edit comment:", currentMessage._id, commentToEdit);
+        socket.emit("commentToEdit", currentMessage._id, commentToEdit);
+
+        setCommentText("");
+        setOpenCommentModal(false);
+        setCommentIdToEdit(null);
+      }
+    } else {
+      if (user && commentText.trim()) {
+        const comment = {
           text: commentText,
           user: user.id,
           name: user.name,
-        });
-      //========================================
-      console.log("--modal add comment:", message._id, comment);
-      socket.emit("addComment", message._id, comment);
-      setCommentText("");
-      setOpen(false);
+        };
+        console.log("--modal add comment:", currentMessage._id, comment);
+        socket.emit("addComment", currentMessage._id, comment);
+        setCommentText("");
+        setOpenCommentModal(false);
+      }
     }
-    // } else {
-    // setOpen(false);
+  };
 
-    // setTimeout(() => {
-    //   setCommentText("");
-    //   setErrorMessage("");
-    // }, 2000);
-    // }
-  };
-  // --------------
   const handleCommentChange = (e) => {
-    setCommentText(e.target.value);
+    if (e.target.value) {
+      setCommentText(e.target.value);
+    } else {
+      setCommentText("");
+      setCommentIdToEdit(null);
+    }
   };
-  // --------------
+
+  const handleBackdropClick = () => {
+    setOpenCommentModal(false);
+    setCommentText("");
+    setCommentIdToEdit(null);
+  };
+
   return (
     <Dialog
-      open={open}
-      onClose={handleCloseModal}
-      className="modalDialog"
+      open={openCommentModal}
+      onClose={handleBackdropClick}
       BackdropProps={{
         style: {
           backgroundColor: "rgba(0, 0, 0, 0.8)",
@@ -67,22 +92,20 @@ const ModalComponent = ({
       }}
     >
       <IconButton
-        onClick={handleCloseModal}
-        color="primary"
         className="closeModal"
+        onClick={() => setOpenCommentModal(false)}
       >
-        <CloseIcon className="deliteCard" />
+        <CloseIcon />
       </IconButton>
-      <DialogContent className="modalContent">
-        {/* comment+ */}
+
+      <DialogContent className="CommentModal-content">
         <TextField
           label="Add a comment"
-          fullWidth
           variant="outlined"
           value={commentText}
           onChange={handleCommentChange}
-          size="small"
           style={{ marginBottom: "12px" }}
+          className="commentInput"
         />
         <Button
           variant="contained"
@@ -90,7 +113,7 @@ const ModalComponent = ({
           onClick={handleAddComment}
           fullWidth
         >
-          Add Comment
+          {commentIdToEdit ? "Edit Comment" : "Add Comment"}
         </Button>
       </DialogContent>
     </Dialog>

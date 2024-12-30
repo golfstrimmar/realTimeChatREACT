@@ -1,48 +1,112 @@
 @import '../../scss/common/colors.scss';
 
-.modalDialog {
+
+
+.css-10d30g3-MuiPaper-root-MuiDialog-paper {
+  background: transparent !important;
+}
+
+.modalContent {
   position: fixed;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  left: 0;
+  display: flex;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
   z-index: 99999;
-  overflow: auto;
-  overflow-y: auto;
+  width: max-content;
+  height: max-content;
+  z-index: 50;
 
-}
-
---Paper-shadow {}
-
-.MuiModal-backdrop {
-  background: transparent !important;
-}
-
-.mesSvg {
-  width: 100%;
-  height: 100%;
-  background: transparent !important;
-
-  .css-10d30g3-MuiPaper-root-MuiDialog-paper {
-    background: transparent !important;
-  }
-
-  svg {
-
-    display: block;
-    width: 110%;
-    height: 60%;
-  }
-
-  h6 {
+  &::after {
+    content: '';
     position: absolute;
+    background-color: rgba(0, 0, 0, 0.85);
+    width: 100vw;
+    height: 100vh;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    font-size: 20px;
-    min-width: 300px;
 
   }
+
+  h6 {
+    font-size: 20px;
+  }
+}
+
+.messageText {
+  border-radius: 5px;
+  color: white;
+  position: absolute;
+  position: relative;
+  padding: 20px;
+  border-radius: 10px;
+  border: 2px solid $blue-deep;
+  max-width: 300px;
+  font-family: Arial, sans-serif;
+  position: relative;
+  z-index: 4;
+  background-color: $l-light;
+  text-align: center;
+  padding: 30px 40px 30px 20px;
+
+  &:after {
+    content: "";
+    position: absolute;
+    bottom: -9px;
+    left: 20px;
+    width: 23px;
+    height: 15px;
+    border-left: 1px solid $blue-deep;
+    /* border-right: 1px solid #6200ea; */
+    border-bottom: 1px solid $blue-deep;
+    z-index: 2;
+    background-color: $l-light;
+    overflow: hidden;
+    transform: translate(57%, 0%) rotate(-34deg);
+    z-index: -1;
+  }
+
+}
+
+.CommentModal {
+  position: fixed;
+  display: flex;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 99999;
+  width: max-content;
+  height: max-content;
+  z-index: 50;
+
+  &::after {
+    content: '';
+    position: absolute;
+    background-color: rgba(0, 0, 0, 0.65);
+    width: 100vw;
+    height: 100vh;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+
+  }
+
+  &-content {
+    background: white !important;
+    overflow: hidden;
+    padding-top: 35px !important;
+  }
+
+  .MuiDialogContent-root {
+    padding-top: 43px !important;
+  }
+
+
+}
+
+.commentInput {
+  width: 100%;
 }
 
 .closeModal {
@@ -54,20 +118,4 @@
   width: 15px;
   height: 15px;
 
-}
-
-.modalContent {
-  padding: 20px 40px 10px 20px !important;
-  min-width: 300px;
-  min-height: 200px;
-  background: transparent !important;
-
-}
-
-.messageText {
-  padding: 5px !important;
-  border-radius: 5px;
-  background-color: $blue;
-  color: white;
-  position: absolute;
 }

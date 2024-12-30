@@ -14,11 +14,7 @@ const AllUsers = () => {
   const [errorMessage, setErrorMessage] = useState("");
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  // ====================================
-  // useEffect(() => {
-  //   if (socket) {
-  //   }
-  // }, [socket]);
+
   // =========================
   const handleGoPrivat = (Gouser) => {
     if (user.id !== Gouser._id) {
