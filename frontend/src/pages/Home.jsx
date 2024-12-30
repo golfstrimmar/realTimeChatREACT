@@ -8,7 +8,10 @@ const HomePage = ({ messages, socket }) => {
       <div className="imgs">
         <img src={chatBg} alt="" />
       </div>
-      <Typography variant="h3" style={{ marginBottom: "20px" }}>
+      <Typography
+        variant="h3"
+        style={{ marginBottom: "20px", textAlign: "center" }}
+      >
         Welcome to the Chat!
       </Typography>
       <Chat messages={messages} socket={socket} />

@@ -30,6 +30,10 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+
+  * {
+    line-height: 1 !important;
+  }
 }
 
 .message-file {
@@ -56,40 +60,56 @@
   gap: 20px;
 }
 
-.comment-block {
-  margin: 5px 0;
+.comment {
+  &-block {
+    margin: 5px 0;
+    display: grid;
+    grid-template-columns: max-content 1fr max-content max-content;
+    gap: 8px;
+  }
 
-  .comment-name {
-    margin: 15px 10px 0 0;
+  &-name {
     background-color: rgba(0, 0, 0, 0.1);
     padding: 5px 10px;
     border-radius: 50%;
+    width: fit-content;
+    height: fit-content;
+  }
+
+  &-text {
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    padding: 2px 10px;
+    border-radius: 5px;
+    background-color: #214067;
+    color: white !important;
+  }
+
+}
+
+.comments {
+  &-title {
+    margin: 0 0 8px 0;
   }
 }
 
-.comment-text {
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  padding: 5px 10px;
-  border-radius: 5px;
-  background-color: #214067;
-  color: white !important;
-}
 
-.delete-icon {
+.message-icon {
   cursor: pointer;
-  margin: 0 0 0 15px;
+  margin: 0 0 0 10px;
   border-radius: 50%;
   transition: all 0.2s ease-in-out;
   padding: 5px;
+  font-size: 30px;
 
   &:hover {
     background-color: rgba(255, 0, 0, 0.1) !important;
   }
 }
 
-.deliteCard {
+.comment-icon {
   cursor: pointer;
-  margin: 0 0 0 20px;
+  margin: 0 0 0 15px;
+  color: #0e6bdd !important;
 }
 
 
@@ -100,8 +120,61 @@
   font-size: 14px;
 }
 
-.comment-icon {
-  cursor: pointer;
-  margin: 0 0 0 15px;
-  color: #0e6bdd !important;
+
+
+@media (max-width: 899px) {
+  .MessageInfo {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-direction: column;
+
+    * {
+      line-height: 1 !important;
+    }
+  }
+
+  .comment-block {
+    margin: 5px 0;
+
+    .comment-name {
+      margin: 15px 10px 0 0;
+      background-color: rgba(0, 0, 0, 0.1);
+      padding: 5px 10px;
+      border-radius: 50%;
+    }
+  }
+}
+
+
+@media (max-width: 899px) {
+  .comment {
+    &-block {
+      margin: 5px 0;
+      display: grid;
+      grid-template-columns: max-content 1fr;
+      gap: 8px;
+    }
+
+    &-name {
+      padding: 5px 10px;
+      width: fit-content;
+    }
+
+
+  }
+
+  .message-icon {
+    cursor: pointer;
+    margin: 0 0 0 5px;
+    border-radius: 50%;
+    transition: all 0.2s ease-in-out;
+    padding: 5px;
+    font-size: 30px;
+
+    &:hover {
+      background-color: rgba(255, 0, 0, 0.1) !important;
+    }
+  }
+
 }

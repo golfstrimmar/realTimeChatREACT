@@ -24,3 +24,18 @@
   display: flex;
   gap: 5px;
 }
+
+// @media (max-width: 899px) {}
+
+@media (max-width: 899px) {
+  .OnlineUsers {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .userInfo {
+    gap: 5px;
+    flex-direction: column;
+    align-items: center;
+  }
+}

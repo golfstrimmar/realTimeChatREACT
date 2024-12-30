@@ -23,7 +23,7 @@
 .messageInput {
   background-color: whitesmoke !important;
   border-radius: 10px;
-  width: calc(100% - 100px) !important;
+  width: calc(100% - 70px) !important;
 
   .MuiInputBase-root {
     border-radius: 10px;
@@ -72,12 +72,10 @@
   left: auto;
   transform: translateY(-50%);
   right: 20px;
-  width: fit-content;
   border-radius: 100% !important;
-  padding: 30px !important;
-  min-width: 4px;
-  width: 40px !important;
-  height: 40px !important;
+  min-width: 2px !important;
+  padding: 10px !important;
+  width: fit-content !important;
 
   span {
     margin: 0 0 0 0;

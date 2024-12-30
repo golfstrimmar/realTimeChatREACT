@@ -179,3 +179,18 @@
     order: -1;
   }
 }
+
+
+@media (max-width: 899px) {
+  .personal-body {
+    grid-template-columns: 1fr;
+  }
+
+  .personal-menu {
+    padding: 55px 0px 0 0px;
+  }
+
+  .personal-plaza {
+    padding: 30px 10px;
+  }
+}

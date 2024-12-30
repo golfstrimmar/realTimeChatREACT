@@ -6,6 +6,13 @@ import { TextField, Button, Typography, Container, Box } from "@mui/material";
 import { useSelector, useDispatch } from "react-redux";
 import Loading from "../components/Loading/Loading";
 import { setErrorMessage } from "../redux/actions/errorActions";
+import {
+  Radio,
+  RadioGroup,
+  FormControlLabel,
+  FormControl,
+  FormLabel,
+} from "@mui/material";
 const Register = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -13,10 +20,12 @@ const Register = () => {
     name: "",
     email: "",
     password: "",
+    role: "",
   });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const socket = useSelector((state) => state.socket.socket);
+  const [selectedRole, setSelectedRole] = useState("user");
   // ------------------------------------------------------
 
   // ------------------------------------------------------
@@ -67,6 +76,14 @@ const Register = () => {
     }
   };
 
+  const handleRoleChange = (event) => {
+    setSelectedRole(event.target.value);
+    setFormData({ ...formData, role: event.target.value });
+  };
+  useEffect(() => {
+    if (selectedRole === "admin") {
+    }
+  }, [selectedRole]);
   return (
     <Container maxWidth="xs" className="pageContent">
       {loading && <Loading />}
@@ -122,6 +139,28 @@ const Register = () => {
               margin="normal"
               variant="outlined"
             />
+          </div>
+          <div>
+            <FormControl component="fieldset">
+              <FormLabel component="legend">Select Role</FormLabel>
+              <RadioGroup
+                aria-label="role"
+                name="role"
+                value={selectedRole}
+                onChange={handleRoleChange}
+              >
+                <FormControlLabel
+                  value="admin"
+                  control={<Radio />}
+                  label="Admin"
+                />
+                <FormControlLabel
+                  value="user"
+                  control={<Radio />}
+                  label="User"
+                />
+              </RadioGroup>
+            </FormControl>
           </div>
           <Button
             fullWidth

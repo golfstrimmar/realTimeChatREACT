@@ -6,6 +6,7 @@ import Loading from "../../components/Loading/Loading";
 import { useSelector, useDispatch } from "react-redux";
 import { setGoPrivat } from "../../redux/actions/AllUsersActions";
 import chatBg from "../../assets/img/chat.jpg";
+
 const Personal = () => {
   const user = useSelector((state) => state.auth.user);
   const allUsers = useSelector((state) => state.allUsers.allUsers);

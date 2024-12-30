@@ -148,16 +148,13 @@ const Message = ({
             />
             {/* Edit*/}
             {author && (
-              <EditIcon
-                className="edit-icon deliteCard"
-                onClick={handleEditMessage}
-              />
+              <EditIcon className="message-icon" onClick={handleEditMessage} />
             )}
             {/* Delete*/}
             {author && (
               <DeleteIcon
                 color="error"
-                className="delete-icon deliteCard"
+                className="message-icon"
                 onClick={handleDeliteMessage}
               />
             )}
@@ -171,10 +168,10 @@ const Message = ({
             color="textSecondary"
             style={{ marginBottom: "12px" }}
           >
-            <strong>Comments:</strong>
+            <p className="comments-title">Comments:</p>
             {message.comments.length > 0 ? (
               message.comments.map((comment, index) => (
-                <div key={index} style={{ marginBottom: "8px" }}>
+                <div key={index} className="comments">
                   <div className="comment-block">
                     <Typography
                       variant="body2"
@@ -190,23 +187,25 @@ const Message = ({
                     >
                       {comment.text}
                     </Typography>
-                    {user && comment.user === user.id && (
-                      <EditIcon
-                        className="edit-icon deliteCard"
-                        onClick={() => {
-                          handleEditComment(message, comment._id);
-                        }}
-                      />
-                    )}
-                    {user && comment.user === user.id && (
-                      <DeleteIcon
-                        color="error"
-                        className="delete-icon"
-                        onClick={() =>
-                          handleDeleteComment(message, comment._id)
-                        }
-                      />
-                    )}
+                    <div>
+                      {user && comment.user === user.id && (
+                        <EditIcon
+                          className="message-icon"
+                          onClick={() => {
+                            handleEditComment(message, comment._id);
+                          }}
+                        />
+                      )}
+                      {user && comment.user === user.id && (
+                        <DeleteIcon
+                          color="error"
+                          className="message-icon"
+                          onClick={() =>
+                            handleDeleteComment(message, comment._id)
+                          }
+                        />
+                      )}
+                    </div>
                   </div>
                 </div>
               ))

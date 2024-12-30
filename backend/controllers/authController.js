@@ -17,7 +17,7 @@ const __dirname = path.dirname(__filename);
 
 //================================== Регистрация нового пользователя с валидацией
 export const registerUser = async (req, res) => {
-  const { name, email, password } = req.body;
+  const { name, email, role, password } = req.body;
 
   // Проверка на ошибки валидации
   const errors = validationResult(req);
@@ -31,11 +31,16 @@ export const registerUser = async (req, res) => {
     if (existingUser) {
       return res.status(400).json({ message: "User already exists" });
     }
+    const adminExists = await User.findOne({ role: "admin" });
 
+    if (adminExists && role === "admin") {
+      return res.status(400).json({ message: "Admin already exists" });
+    }
     // Создаем нового пользователя
     const newUser = new User({
       name,
       email,
+      role: role || "user",
       password,
     });
 

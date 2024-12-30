@@ -50,3 +50,15 @@
   display: flex !important;
   color: white;
 }
+
+@media (max-width: 899px) {
+  .allUsers {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    &-title {
+      margin-right: 0 !important;
+    }
+  }
+}

@@ -63,6 +63,7 @@ const Login = () => {
           navigate("/");
         }, 1000);
       } catch (error) {
+        setLoading(false);
         dispatch(setErrorMessage(error.response.data.message));
         console.error(error.response.data);
       }
@@ -91,6 +92,7 @@ const Login = () => {
         }, 2000);
       })
       .catch((error) => {
+        setLoading(false);
         dispatch(setErrorMessage("Google login failed."));
         console.error(error);
       });
@@ -99,6 +101,7 @@ const Login = () => {
   const handleGoogleLoginFailure = (error) => {
     console.error("Google login failed", error);
     dispatch(setErrorMessage("Google login failed"));
+    setLoading(false);
   };
   // ======================
   return (
