@@ -1,0 +1,15 @@
+name: Keep Server Alive
+
+on:
+  schedule:
+    - cron: "*/5 * * * *" # Запускать каждый 10 минут
+  workflow_dispatch: # Позволяет вручную запускать этот workflow
+
+jobs:
+  keep-alive:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Pinging the server to keep it awake
+        run: |
+          curl -X GET https://realtimechatreact.onrender.com
