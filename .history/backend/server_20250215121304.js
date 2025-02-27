@@ -47,6 +47,17 @@ const io = new Server(server, {
   },
 });
 
+// ===================================================
+app.use(
+  cors({
+    // origin: "http://localhost:3000",
+    // origin: "https://real-time-chat-react-sigma.vercel.app",
+    origin: "*",
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
+
 // ===================================
 
 // app.use((req, res, next) => {
