@@ -50,7 +50,7 @@ const io = new Server(server, {
 // ===================================
 app.use(
   cors({
-    origin: "https://real-time-chat-react-sigma.vercel.app/", // Твой фронт на Vercel
+    origin: "https://real-time-chat-react-sigma.vercel.app", // Твой фронт на Vercel
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
