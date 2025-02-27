@@ -158,12 +158,12 @@ const Login = () => {
           </Button>
         </form>
         <Box className="googleLoginButton">
-          <GoogleOAuthProvider clientId="704767415441-ckajbb1si9t44eb47grf4mmvda0g6rp3.apps.googleusercontent.com">
+          
             <GoogleLogin
               onSuccess={handleGoogleLoginSuccess}
               onError={handleGoogleLoginFailure}
             />
-          </GoogleOAuthProvider>
+         
         </Box>
       </Box>
       {loading && <Loading />}
