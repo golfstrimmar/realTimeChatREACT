@@ -38,25 +38,23 @@ const imageCachePath = path.join(__dirname, "imageCache");
 fs.mkdirSync(imageCachePath, { recursive: true });
 app.use("/images", express.static(imageCachePath));
 // ===================================================
-// Глобальный CORS для HTTP-запросов
-app.use(
-  cors({
-    origin: "https://real-time-chat-react-sigma.vercel.app", // Твой Vercel-домен
-    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  })
-);
-// ===================================================
 const io = new Server(server, {
   cors: {
-    origin: "https://real-time-chat-react-sigma.vercel.app",
+    // origin: "https://real-time-chat-react-sigma.vercel.app",
+    origin: "*",
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     allowedHeaders: ["Content-Type", "Authorization"],
   },
 });
 
 // ===================================
-
+app.use(
+  cors({
+    origin: "https://real-time-chat-react-sigma.vercel.app/", // Твой фронт на Vercel
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
 // app.use((req, res, next) => {
 //   console.log(
 //     `Incoming request: method=${req.method} url=${req.url}
