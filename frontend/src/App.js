@@ -12,7 +12,7 @@ import Header from "./components/Header/Header";
 import NotificationModal from "./components/Modal/NotificationModal";
 const serverUrl = process.env.REACT_APP_API_URL;
 const googleClient = process.env.REACT_APP_GOOGLE_CLIENT_ID;
-console.log("Google Client ID:", googleClient);
+console.log("Google Client ID:", process.env.REACT_APP_GOOGLE_CLIENT_ID);
 function App() {
  
   const dispatch = useDispatch();
