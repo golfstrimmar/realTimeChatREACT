@@ -7,12 +7,12 @@ import { setOnlineUsers } from "./redux/actions/onlineUsersActions";
 import { setAllUsers } from "./redux/actions/AllUsersActions";
 import { io } from "socket.io-client"; // Библиотека для сокетов
 import AppRouter from "./router/AppRouter";
-
+import { GoogleOAuthProvider } from "@react-oauth/google";
 import Header from "./components/Header/Header";
 import NotificationModal from "./components/Modal/NotificationModal";
 
 const serverUrl = process.env.REACT_APP_API_URL;
-
+const googleClient = process.env.REACT_APP_GOOGLE_CLIENT_ID;
 function App() {
   const dispatch = useDispatch();
   const user = useSelector((state) => state.auth.user);
@@ -74,13 +74,13 @@ function App() {
   }, [dispatch, socket, isDisconnecting]);
 
   return (
-   
+    <GoogleOAuthProvider clientId={googleClient}>
       <Router>
         <Header />
         <AppRouter />
         <NotificationModal messageError={messageError} />
       </Router>
-    
+    </GoogleOAuthProvider>
   );
 }
 

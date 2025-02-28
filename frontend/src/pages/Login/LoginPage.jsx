@@ -3,7 +3,7 @@ import "./Login.scss";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { TextField, Button, Typography, Container, Box } from "@mui/material";
-import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
+import {  GoogleLogin } from "@react-oauth/google";
 import { useSelector, useDispatch } from "react-redux";
 import { setOnlineUsers } from "../../redux/actions/onlineUsersActions";
 import { setUser } from "../../redux/actions/authActions";
@@ -20,7 +20,6 @@ const Login = () => {
   const [errors, setErrors] = useState({});
   const socket = useSelector((state) => state.socket.socket);
   const [loading, setLoading] = useState(false);
-  const googleClient = process.env.REACT_APP_GOOGLE_CLIENT_ID;
   // ---------------------------------------
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -159,12 +158,12 @@ const Login = () => {
           </Button>
         </form>
         <Box className="googleLoginButton">
-           <GoogleOAuthProvider clientId={googleClient}>
+          
             <GoogleLogin
               onSuccess={handleGoogleLoginSuccess}
               onError={handleGoogleLoginFailure}
             />
-         </GoogleOAuthProvider>
+         
         </Box>
       </Box>
       {loading && <Loading />}
