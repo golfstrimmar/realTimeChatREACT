@@ -41,7 +41,7 @@ app.use("/images", express.static(imageCachePath));
 // Глобальный CORS для HTTP-запросов
 app.use(
   cors({
-    origin: "https://real-time-chat-react-sigma.vercel.app", // Твой Vercel-домен
+    origin: "https://real-time-chat-react-sigma.vercel.app",
     methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
     allowedHeaders: ["Content-Type", "Authorization"],
   })
